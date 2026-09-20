@@ -1,0 +1,24 @@
+Ironbook is a workout log with the look of a gym blackboard: chalk on iron, red tape, gold for records.
+
+The whole point of a training log is knowing what you did last time while you stand at the bar. Ironbook puts that number next to every set, and then draws the line going up.
+
+TRAIN
+• Start from a template (three included) or start blank
+• Every set shows last session's weight and reps; tick a set and it copies them if you left them blank
+• Ticking a set starts the rest timer: 1:00, 1:30, 2:00 or 3:00, with a buzz when it is time
+• Plate maths for any bar
+• Add exercises and sets on the fly; finish, and Ironbook tells you if you set a PR
+
+HISTORY
+• Every workout with sets, volume and duration
+• Repeat any past workout with one tap
+
+PROGRESS
+• Estimated one-rep max over time per exercise, with PR sessions marked in gold
+• Gain since your first log, heaviest set per session
+• Weekly volume across everything
+
+RECORDS
+• Est. 1RM, best set, heaviest set for every lift, ranked
+
+kg or lb. No account, no ads, no tracking, nothing leaves your phone.

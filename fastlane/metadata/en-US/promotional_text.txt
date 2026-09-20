@@ -1,0 +1,1 @@
+A workout log written in chalk. Last session beside every set, a rest timer that starts itself, and a line that goes up.
