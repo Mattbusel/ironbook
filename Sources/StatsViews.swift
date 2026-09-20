@@ -99,7 +99,7 @@ struct ProgressTab: View {
                     .chartYScale(domain: (pts.map { $0.e1rm }.min() ?? 0) * 0.92...(pts.map { $0.e1rm }.max() ?? 1) * 1.05)
                     .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisGridLine().foregroundStyle(Chalk.line); AxisValueLabel().foregroundStyle(Chalk.faint).font(.chalk(10, .bold)) } }
                     .chartYAxis { AxisMarks(position: .leading) { _ in AxisGridLine().foregroundStyle(Chalk.line); AxisValueLabel().foregroundStyle(Chalk.faint).font(.mono(10)) } }
-                    .frame(height: 220)
+                    .frame(height: 220).clipped()
                 }
                 .slate()
                 VStack(alignment: .leading, spacing: 8) {

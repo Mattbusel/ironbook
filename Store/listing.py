@@ -425,47 +425,8 @@ def categories():
                 "type": "appInfos",
                 "id": info_id,
                 "relationships": {
-                    "primaryCategory": {"data": {"type": "appCategories", "id": "SPORTS"}},
-                    "secondaryCategory": {"data": {"type": "appCategories", "id": "SPORTS"}},
-                },
-            }
-        },
-    )
-    print("  categories set" if result is not None else "  categories failed")
-
-
-def finish():
-    """Everything that does not need a compiled binary."""
-    print("metadata:")
-    push_metadata()
-    print("age rating:")
-    age_rating()
-    print("review details:")
-    review_details()
-    print("categories:")
-    categories()
-    print("price:")
-    price(PRICE)
-    print()
-    status()
-
-
-def leaderboards():
-    """Create the two Game Center leaderboards the game submits to.
-
-    IDs must match GameCenter.swift. Both are integer boards: the clear time is
-    submitted in hundredths of a second so a "fastest" board sorts ascending
-    with useful precision, and the launch is plain metres sorted descending.
-    """
-    app = find_app()
-    if not app:
-        sys.exit("no app record yet")
-
-    detail = call("GET", f"/v1/apps/{app['id']}/gameCenterDetail", quiet=True)
-    if not detail or not detail.get("data"):
-        made = call("POST", "/v1/gameCenterDetails", {"data": {
-            "type": "gameCenterDetails",
-            "relationships": {"app": {"data": {"type": "apps", "id": app["id"]}}}}})
+                    "primaryCategory": {"data": {"type": "appCategories", "id": "HEALTH_AND_FITNESS"}},
+                    "secondaryCategory": {"data": {"type": "appCategories", "id": "SPORTS"}}}})
         if not made:
             print("  could not enable Game Center on the app")
             return
