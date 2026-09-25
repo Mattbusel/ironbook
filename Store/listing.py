@@ -185,7 +185,7 @@ def review_details():
 
 
 # Apple's display type for each accepted screenshot size, both orientations.
-PRICE = "4.99"
+PRICE = "0.0"  # free since 1.1; Ironbook Pro is the IAP (Store/iap.py)
 
 DISPLAY_BY_SIZE = {
     (1320, 2868): "APP_IPHONE_67",

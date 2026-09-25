@@ -12,8 +12,9 @@ import Charts
 @Observable
 final class Pro {
     static let productID = "com.mattbusel.ironbook.pro"
-    /// The price went to Free at 2026-09-25 17:15 UTC. Downloads before this were paid.
-    static let wentFree = Date(timeIntervalSince1970: 1_790_356_500)
+    /// The price went to Free at 2026-09-25 15:18 UTC. Storefronts can take hours to catch up,
+    /// so anyone who got the app before 18:18 UTC is treated as a buyer.
+    static let wentFree = Date(timeIntervalSince1970: 1_790_360_309)
 
     enum Reason: String, Identifiable { case progress, records, plates, programs, settings; var id: String { rawValue } }
 
