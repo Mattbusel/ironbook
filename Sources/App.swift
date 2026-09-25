@@ -4,11 +4,16 @@ import SwiftUI
 struct IronbookApp: App {
     @State private var store: Store
     @State private var router = Router()
+    @State private var pro: Pro
 
     init() {
         let args = ProcessInfo.processInfo.arguments
         let demo = args.contains("-shot") || args.contains("-demoAutoplay")
         _store = State(initialValue: Store(demo: demo))
+        // Screenshots and the review recording show Pro; the paywall shots show it locked.
+        let shot = args.firstIndex(of: "-shot").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil }
+        let lockedShot = shot.map { $0.hasPrefix("paywall") || $0.hasPrefix("locked") } ?? false
+        _pro = State(initialValue: demo ? Pro(forced: !lockedShot) : Pro())
     }
 
     var body: some Scene {
@@ -16,9 +21,10 @@ struct IronbookApp: App {
             RootView()
                 .environment(store)
                 .environment(router)
+                .environment(pro)
                 .preferredColorScheme(.dark)
                 .tint(Chalk.red)
-                .onAppear { router.applyShotArgs(store); Autopilot.shared.run(store, router) }
+                .onAppear { router.applyShotArgs(store, pro); Autopilot.shared.run(store, router) }
         }
     }
 }
@@ -42,8 +48,10 @@ final class Router {
     var showTimer = false
     var viewing: Session? = nil
     var editingTemplate: Template? = nil
+    var showPrograms = false
 
-    func applyShotArgs(_ s: Store) {
+    @MainActor
+    func applyShotArgs(_ s: Store, _ pro: Pro) {
         let a = ProcessInfo.processInfo.arguments
         guard let i = a.firstIndex(of: "-shot"), i + 1 < a.count else {
             if a.contains("-demoAutoplay") { s.live = nil; s.liveStart = nil }
@@ -55,6 +63,9 @@ final class Router {
         case "history": s.live = nil; tab = .history
         case "progress": s.live = nil; tab = .progress
         case "records": s.live = nil; tab = .records
+        case "programs": s.live = nil; showPrograms = true
+        case "paywall": s.live = nil; tab = .progress; pro.ask(.progress)
+        case "locked": s.live = nil; tab = .progress
         default: break
         }
     }
@@ -63,6 +74,7 @@ final class Router {
 struct RootView: View {
     @Environment(Store.self) private var store
     @Environment(Router.self) private var router
+    @Environment(Pro.self) private var pro
 
     var body: some View {
         @Bindable var router = router
@@ -72,8 +84,14 @@ struct RootView: View {
                 switch router.tab {
                 case .train: TrainView()
                 case .history: HistoryView()
-                case .progress: ProgressTab()
-                case .records: RecordsView()
+                case .progress:
+                    if pro.unlocked { ProgressTab() } else {
+                        LockedPage(reason: .progress, title: "See the line go up.", pitch: "Your estimated one-rep max for every lift, PR sessions in gold, and weekly volume, drawn from the workouts you log.") { ProgressTab() }
+                    }
+                case .records:
+                    if pro.unlocked { RecordsView() } else {
+                        LockedPage(reason: .records, title: "Your wall of fame.", pitch: "Every lift ranked by estimated one-rep max, with your best set and your heaviest set.") { RecordsView() }
+                    }
                 }
             }
             BoardTabBar(selection: $router.tab).padding(.bottom, 2)
@@ -81,6 +99,18 @@ struct RootView: View {
         .fullScreenCover(isPresented: $router.showLive) { LiveSessionView() }
         .sheet(item: $router.viewing) { s in SessionDetailView(session: s).presentationBackground(Chalk.board) }
         .sheet(item: $router.editingTemplate) { t in TemplateEditor(template: t).presentationBackground(Chalk.board) }
+        .sheet(isPresented: $router.showPrograms) {
+            ProgramLibrary().presentationBackground(Chalk.board)
+                .sheet(item: paywall(when: true)) { r in PaywallView(reason: r).presentationBackground(Chalk.board) }
+        }
+        .sheet(item: paywall(when: false)) { r in PaywallView(reason: r).presentationBackground(Chalk.board) }
+    }
+}
+
+extension RootView {
+    /// The paywall hangs off whichever sheet is on top: the program library when it is open, the root otherwise.
+    func paywall(when programs: Bool) -> Binding<Pro.Reason?> {
+        Binding(get: { router.showPrograms == programs ? pro.paywall : nil }, set: { pro.paywall = $0 })
     }
 }
 

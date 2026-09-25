@@ -3,6 +3,7 @@ import SwiftUI
 struct TrainView: View {
     @Environment(Store.self) private var store
     @Environment(Router.self) private var router
+    @Environment(Pro.self) private var pro
     @State private var plateWeight: String = ""
     @State private var bar: Double = 20
 
@@ -28,7 +29,11 @@ struct TrainView: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                HStack { Eyebrow("Templates"); Spacer(); GhostButton(title: "New", icon: "plus") { newTemplate() } }
+                HStack(spacing: 8) {
+                    Eyebrow("Templates"); Spacer()
+                    GhostButton(title: "Programs", icon: pro.unlocked ? "books.vertical" : "lock.fill") { router.showPrograms = true }
+                    GhostButton(title: "New", icon: "plus") { newTemplate() }
+                }
                 ForEach(store.templates) { t in
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 4) {
@@ -48,6 +53,36 @@ struct TrainView: View {
                 GhostButton(title: "Start blank", icon: "square.dashed") { store.start(nil); router.showLive = true }
             }
 
+            if pro.unlocked { plateCard } else {
+                Button { pro.ask(.plates) } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "circle.grid.cross.fill").font(.system(size: 18, weight: .black)).foregroundStyle(Chalk.gold)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Eyebrow("Plate maths")
+                            Text("Type the load, get the plates per side.").font(.chalk(14, .medium)).foregroundStyle(Chalk.dust)
+                        }
+                        Spacer()
+                        Tape(text: "Pro", tilt: 3)
+                    }
+                    .slate()
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(spacing: 10) {
+                Eyebrow("Units")
+                Spacer()
+                Picker("Unit", selection: Bindable(store).unit) { Text("kg").tag("kg"); Text("lb").tag("lb") }
+                    .pickerStyle(.segmented).frame(width: 140)
+                    .onChange(of: store.unit) { store.save() }
+            }
+            .slate(padding: 12)
+
+            ProCard()
+        }
+    }
+
+    var plateCard: some View {
             VStack(alignment: .leading, spacing: 10) {
                 Eyebrow("Plate maths")
                 HStack(spacing: 10) {
@@ -60,16 +95,6 @@ struct TrainView: View {
                 Text(plates).font(.mono(14)).foregroundStyle(Chalk.dust)
             }
             .slate()
-
-            HStack(spacing: 10) {
-                Eyebrow("Units")
-                Spacer()
-                Picker("Unit", selection: Bindable(store).unit) { Text("kg").tag("kg"); Text("lb").tag("lb") }
-                    .pickerStyle(.segmented).frame(width: 140)
-                    .onChange(of: store.unit) { store.save() }
-            }
-            .slate(padding: 12)
-        }
     }
 
     var plates: String {

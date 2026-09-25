@@ -66,6 +66,12 @@ jobs:
           xcrun simctl launch "$udid" com.mattbusel.ironbook -shot timer
           sleep 7
           xcrun simctl io "$udid" screenshot "shots/05.png"
+          for s in paywall locked programs; do
+            xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
+            xcrun simctl launch "$udid" com.mattbusel.ironbook -shot $s
+            sleep 7
+            xcrun simctl io "$udid" screenshot "shots/$s.png"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:
