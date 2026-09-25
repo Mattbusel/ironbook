@@ -166,7 +166,9 @@ platform :ios do
       # Store Connect and nothing is submitted, so the listing can be looked at
       # before it goes to Apple.
       submit_for_review: false,
-      force: true
+      force: true,
+      # Precheck cannot read in-app purchases through an API key and fails the lane.
+      precheck_include_in_app_purchases: false
     )
   end
 end
