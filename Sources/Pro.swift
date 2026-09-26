@@ -4,17 +4,17 @@ import Charts
 
 /// Ironbook Pro: one non-consumable. Logging is free forever; Pro is the analysis layer.
 ///
-/// Everyone who installed 1.0 keeps everything: the people who paid for it, and the people
-/// who got it free the day the price dropped, before Pro existed. AppTransaction's
-/// originalAppVersion is the build number they first installed; 1.0 shipped as build 1.
-/// Only trusted in production: sandbox and Xcode report made-up values, and App Review
-/// must see the real paywall.
+/// People who paid for Ironbook before it went free keep everything. AppTransaction's
+/// originalPurchaseDate says when this Apple ID first got the app; anyone before the
+/// moment the price dropped paid for it. Only trusted in production: sandbox and Xcode
+/// report made-up values, and App Review must see the real paywall.
 @MainActor
 @Observable
 final class Pro {
     static let productID = "com.mattbusel.ironbook.pro"
-    /// The first build that has Pro in it. Anything earlier had every feature.
-    static let firstFreemiumBuild = 2
+    /// The price went to Free at 2026-09-25 15:18 UTC. Storefronts can take hours to catch up,
+    /// so anyone who got the app before 18:18 UTC is treated as a buyer.
+    static let wentFree = Date(timeIntervalSince1970: 1_790_360_309)
 
     enum Reason: String, Identifiable { case progress, records, plates, programs, settings; var id: String { rawValue } }
 
@@ -49,7 +49,7 @@ final class Pro {
         if product == nil { product = try? await Product.products(for: [Pro.productID]).first }
         for await result in Transaction.currentEntitlements { await apply(result) }
         if case .verified(let app)? = try? await AppTransaction.shared,
-           app.environment == .production, (Int(app.originalAppVersion) ?? Int.max) < Pro.firstFreemiumBuild {
+           app.environment == .production, app.originalPurchaseDate < Pro.wentFree {
             grandfathered = true
             grant()
         }
