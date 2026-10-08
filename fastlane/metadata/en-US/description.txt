@@ -1,23 +1,35 @@
-Ironbook is a workout log with the look of a gym blackboard: chalk on iron, red tape, gold for records.
+Ironbook is a workout log with the look of a gym blackboard: chalk on iron, tape, gold for records.
 
-Free to log. Pro is a one-time unlock. No subscription.
+Free to log, forever. Pro is $4.99 once. No subscription.
 
-The whole point of a training log is knowing what you did last time while you stand at the bar. Ironbook puts that number next to every set, and then draws the line going up.
+The whole point of a training log is knowing what you did last time while you stand at the bar. Ironbook puts that number next to every set, runs your rest timer on the Lock Screen, and draws the line going up.
 
 FREE, FOREVER
 • Unlimited workouts, templates and history
-• Start from a template (three included) or start blank
 • Every set shows last session's weight and reps; tick a set and it copies them if you left them blank
-• Ticking a set starts the rest timer: 1:00, 1:30, 2:00 or 3:00, with a buzz when it is time
-• Add exercises and sets on the fly; finish, and Ironbook tells you if you set a PR
-• Repeat any past workout with one tap
+• Rest timer on the Lock Screen and in the Dynamic Island, with a buzz when it's time
+• Warm-up sets worked out for you: empty bar, 40, 60 and 80 percent
+• Plate maths with the bar drawn out, per side, for kg or lb
+• Notes on any lift, and last time's note shown when you do it again
+• A weekly goal, a week streak, and one free streak shield every month
+• A finish screen that calls out every PR
+• Your top three records, and the small week widget on your Home Screen
 
-IRONBOOK PRO, ONE PAYMENT
-• Progress: estimated one-rep max over time per exercise, PR sessions marked in gold, gain since your first log, heaviest set per session, weekly volume
-• Records: est. 1RM, best set and heaviest set for every lift, ranked
-• Plate maths for any bar
-• Program library: 5x5, push pull legs, upper lower, three-day full body and dumbbells only, added to your templates in one tap
+IRONBOOK PRO, $4.99 ONCE
+• Progress: estimated one-rep max over time, PR sessions in gold, heaviest set per session, weekly volume
+• The whole records wall, and every session of every lift
+• Program library: 5x5, push pull legs, upper lower, three-day full body and dumbbells only
+• Save workouts to Apple Health
+• The bigger week widget with your latest PR and what's next
+• CSV export of every set
+
+LITTLE EXTRAS, 99 CENTS
+• Next Block: four weeks of a template with a target on every lift, worked out from your own best numbers. Volume, build, heavy, deload. One block per credit
+• PR Posters: a gold chalkboard poster of a new PR, three to a pack
+• Week Shield: keeps your streak after a short week, beyond the free one each month
+• Tape colours, each with a matching app icon: Cobalt, Volt, Rose and Bone
+• PR Fireworks over every new best
 
 Bought Ironbook before it went free? Pro is already yours.
 
-kg or lb. No account, no ads, no tracking, nothing leaves your phone.
+kg or lb. No account, no ads, no tracking. Your log stays on your phone.

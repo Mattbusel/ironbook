@@ -1,5 +1,14 @@
-Ironbook is now free.
+The biggest Ironbook update yet.
 
-• Logging, templates, history, the live session and the rest timer are free forever
-• Ironbook Pro is a one-time unlock: progress charts, records, plate maths and a new program library (5x5, push pull legs, upper lower and more)
-• Already bought Ironbook? Pro is unlocked for you automatically. If it is not, tap Restore on the Pro card at the bottom of the Train tab.
+• Rest timer on the Lock Screen and in the Dynamic Island, with a buzz when it's up
+• Weekly goal and week streak, with a free streak shield every month
+• One-tap warm-up sets
+• Plate maths is now free, with the bar drawn out
+• Notes on any lift, shown again next time
+• A pick-list of common lifts when you add an exercise
+• A proper finish screen that calls out every PR
+• Home Screen week widget
+• Pro is now $4.99 and adds lift history, Apple Health and CSV export
+• New 99-cent extras: Next Block plans from your own numbers, PR posters, week shields, tape colours with matching icons, PR fireworks
+
+Everything you've logged carries over.

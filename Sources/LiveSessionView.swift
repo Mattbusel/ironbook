@@ -4,12 +4,18 @@ import SwiftUI
 struct LiveSessionView: View {
     @Environment(Store.self) private var store
     @Environment(Router.self) private var router
+    @Environment(Pro.self) private var pro
     @Environment(\.dismiss) private var dismiss
     @State private var restEnd: Date? = nil
     @State private var now = Date.now
     @State private var addingExercise = false
-    @State private var newName = ""
-    @State private var finished: [String]? = nil
+    @State private var result: FinishResult? = nil
+
+    struct FinishResult: Identifiable {
+        let id = UUID()
+        let prs: [PRHit]
+        let session: Session?
+    }
     private let clock = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -23,11 +29,11 @@ struct LiveSessionView: View {
                         ForEach(Array((store.live?.exercises ?? []).enumerated()), id: \.element.id) { ei, ex in
                             exerciseCard(ei, ex)
                         }
-                        GhostButton(title: "Add exercise", icon: "plus") { newName = ""; addingExercise = true }
+                        GhostButton(title: "Add exercise", icon: "plus") { addingExercise = true }
                         HStack(spacing: 10) {
                             GhostButton(title: "Discard", icon: "trash") { store.discard(); dismiss() }
                             TapeButton(title: "Finish workout", icon: "flag.checkered", fill: Chalk.gold) {
-                                let prs = store.finish(); finished = prs
+                                finishWorkout()
                             }
                         }
                         .padding(.top, 8)
@@ -38,16 +44,16 @@ struct LiveSessionView: View {
             if router.showTimer || restEnd != nil { restOverlay }
         }
         .onReceive(clock) { now = $0 }
-        .onAppear { if router.showTimer && restEnd == nil { restEnd = Date.now.addingTimeInterval(67) } }
-        .alert("Add exercise", isPresented: $addingExercise) {
-            TextField("Name", text: $newName)
-            Button("Add") { if !newName.isEmpty { store.live?.exercises.append(ExerciseEntry(name: newName, sets: [SetEntry(), SetEntry(), SetEntry()])); store.save() } }
-            Button("Cancel", role: .cancel) {}
+        .onAppear {
+            if router.showTimer && restEnd == nil { restEnd = Date.now.addingTimeInterval(67) }
+            if router.finishShot { router.finishShot = false; DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { finishWorkout() } }
         }
-        .alert("Saved", isPresented: Binding(get: { finished != nil }, set: { if !$0 { finished = nil; dismiss() } })) {
-            Button("Done") { finished = nil; dismiss() }
-        } message: {
-            Text((finished ?? []).isEmpty ? "Workout logged." : "PR on " + (finished ?? []).joined(separator: ", ") + "!")
+        .sheet(isPresented: $addingExercise) {
+            ExercisePicker { name in store.live?.exercises.append(ExerciseEntry(name: name, sets: [SetEntry(), SetEntry(), SetEntry()])); store.save() }
+                .presentationBackground(Chalk.board)
+        }
+        .sheet(item: $result, onDismiss: { dismiss() }) { r in
+            FinishSheet(session: r.session, prs: r.prs).presentationBackground(Chalk.board)
         }
         .cueSink { cue in handle(cue) }
     }
@@ -90,12 +96,26 @@ struct LiveSessionView: View {
             }
             .font(.chalk(10, .black)).tracking(1.2).foregroundStyle(Chalk.faint)
             ForEach(Array(ex.sets.enumerated()), id: \.element.id) { si, st in
-                setRow(ei, si, st, last: si < last.count ? last[si] : nil, best: best)
+                setRow(ei, si, st, last: st.warmup ? nil : workIndex(ei, si) < last.count ? last[workIndex(ei, si)] : nil, best: best)
+                .opacity(st.warmup && !st.done ? 0.75 : 1)
+                .contextMenu {
+                    Button(role: .destructive) { store.live?.exercises[ei].sets.remove(at: si); store.save() } label: { Label("Remove set", systemImage: "trash") }
+                }
             }
-            HStack {
+            TextField(store.lastNote(ex.name).isEmpty ? "Note: seat height, grip, how it felt" : "Last time: " + store.lastNote(ex.name), text: Binding(
+                get: { store.live?.exercises[safe: ei]?.note ?? "" },
+                set: { store.live?.exercises[ei].note = $0; store.save() }), axis: .vertical)
+                .font(.chalk(12.5, .medium)).foregroundStyle(Chalk.white).lineLimit(1...3)
+                .padding(.horizontal, 10).padding(.vertical, 8).background(RoundedRectangle(cornerRadius: 9).fill(Chalk.board.opacity(0.6)))
+            HStack(spacing: 16) {
                 Button { store.live?.exercises[ei].sets.append(SetEntry()); store.save() } label: {
                     Label("Set", systemImage: "plus").font(.chalk(12, .black)).foregroundStyle(Chalk.dust)
                 }.buttonStyle(.plain)
+                if !ex.sets.contains(where: { $0.warmup }) {
+                    Button { addWarmups(ei, last: last) } label: {
+                        Label("Warm-ups", systemImage: "flame").font(.chalk(12, .black)).foregroundStyle(Chalk.dust)
+                    }.buttonStyle(.plain)
+                }
                 Spacer()
                 Button { store.live?.exercises.remove(at: ei); store.save() } label: {
                     Text("remove").font(.chalk(11, .bold)).foregroundStyle(Chalk.faint)
@@ -107,14 +127,15 @@ struct LiveSessionView: View {
 
     func setRow(_ ei: Int, _ si: Int, _ st: SetEntry, last: SetEntry?, best: Double) -> some View {
         let isPR = st.done && st.e1rm > best && st.e1rm > 0
+        let working = (store.live?.exercises[safe: ei]?.sets.prefix(si).filter { !$0.warmup }.count ?? 0) + 1
         return HStack(spacing: 8) {
-            Text("\(si + 1)").font(.digits(15)).foregroundStyle(Chalk.faint).frame(width: 30, alignment: .leading)
+            Text(st.warmup ? "W" : "\(working)").font(.digits(15)).foregroundStyle(st.warmup ? Chalk.gold.opacity(0.7) : Chalk.faint).frame(width: 30, alignment: .leading)
             Text(last.map { "\(fmtWeight($0.weight ?? 0)) × \($0.reps ?? 0)" } ?? "—").font(.mono(12)).foregroundStyle(Chalk.faint).frame(width: 68, alignment: .leading)
             numberField(placeholder: last.map { fmtWeight($0.weight ?? 0) } ?? "", value: Binding(
-                get: { store.live?.exercises[ei].sets[si].weight },
+                get: { store.live?.exercises[safe: ei]?.sets[safe: si]?.weight },
                 set: { store.live?.exercises[ei].sets[si].weight = $0; store.save() }))
             intField(placeholder: last.map { "\($0.reps ?? 0)" } ?? "", value: Binding(
-                get: { store.live?.exercises[ei].sets[si].reps },
+                get: { store.live?.exercises[safe: ei]?.sets[safe: si]?.reps },
                 set: { store.live?.exercises[ei].sets[si].reps = $0; store.save() }))
                 .frame(width: 66)
             Button { toggle(ei, si, last: last) } label: {
@@ -153,8 +174,13 @@ struct LiveSessionView: View {
         s.exercises[ei].sets[si] = st
         store.live = s; store.save()
         if st.done {
-            restEnd = Date.now.addingTimeInterval(TimeInterval(store.restSeconds))
+            let end = Date.now.addingTimeInterval(TimeInterval(st.warmup ? min(60, store.restSeconds) : store.restSeconds))
+            restEnd = end
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            if !router.demo {
+                RestLive.askOnce()
+                RestLive.start(end: end, workout: s.name, next: nextLabel(after: ei, si))
+            }
         }
     }
 
@@ -177,7 +203,11 @@ struct LiveSessionView: View {
                     Text("Rest").font(.chalk(11, .black)).tracking(1.5).foregroundStyle(Chalk.dust)
                     HStack(spacing: 6) {
                         ForEach([60, 90, 120, 180], id: \.self) { s in
-                            Button { store.restSeconds = s; store.save(); restEnd = Date.now.addingTimeInterval(TimeInterval(s)) } label: {
+                            Button {
+                                store.restSeconds = s; store.save()
+                                let end = Date.now.addingTimeInterval(TimeInterval(s)); restEnd = end
+                                if !router.demo { RestLive.start(end: end, workout: store.live?.name ?? "Workout", next: "") }
+                            } label: {
                                 Text(String(format: "%d:%02d", s / 60, s % 60)).font(.digits(12)).foregroundStyle(store.restSeconds == s ? Chalk.board : Chalk.dust)
                                     .padding(.horizontal, 8).padding(.vertical, 5).background(RoundedRectangle(cornerRadius: 7).fill(store.restSeconds == s ? Chalk.white : Chalk.board))
                             }.buttonStyle(.plain)
@@ -185,7 +215,7 @@ struct LiveSessionView: View {
                     }
                 }
                 Spacer()
-                Button { restEnd = nil; router.showTimer = false } label: {
+                Button { restEnd = nil; router.showTimer = false; RestLive.stop() } label: {
                     Image(systemName: "xmark").font(.system(size: 13, weight: .black)).foregroundStyle(Chalk.dust).frame(width: 34, height: 34).background(Circle().fill(Chalk.board))
                 }.buttonStyle(.plain)
             }
@@ -214,9 +244,42 @@ struct LiveSessionView: View {
             store.live = s
             toggle(ei, si, last: l)
         case "finish":
-            finished = store.finish()
+            finishWorkout()
         default: break
         }
+    }
+}
+
+extension LiveSessionView {
+    /// Index of this set among the working sets, so "last time" lines up past any warm-ups.
+    func workIndex(_ ei: Int, _ si: Int) -> Int {
+        store.live?.exercises[safe: ei]?.sets.prefix(si).filter { !$0.warmup }.count ?? si
+    }
+    func addWarmups(_ ei: Int, last: [SetEntry]) {
+        guard let ex = store.live?.exercises[safe: ei] else { return }
+        let working = ex.sets.first(where: { !$0.warmup })?.weight ?? last.first?.weight ?? 0
+        guard working > 0 else { return }
+        store.live?.exercises[ei].sets.insert(contentsOf: store.warmups(for: working), at: 0)
+        store.save()
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+    /// "Bench press, set 3": the next set not yet ticked, for the Lock Screen timer.
+    func nextLabel(after ei: Int, _ si: Int) -> String {
+        guard let s = store.live else { return "" }
+        for (i, e) in s.exercises.enumerated() where i >= ei {
+            for (j, st) in e.sets.enumerated() where !st.done && (i > ei || j > si) {
+                let n = e.sets.prefix(j).filter { !$0.warmup }.count + 1
+                return st.warmup ? "\(e.name), warm-up" : "\(e.name), set \(n)"
+            }
+        }
+        return ""
+    }
+    func finishWorkout() {
+        RestLive.stop()
+        restEnd = nil
+        let r = store.finish()
+        if let saved = r.session, store.healthOn, pro.unlocked, !router.demo { Task { await HealthLog.save(saved) } }
+        result = FinishResult(prs: r.prs, session: r.session)
     }
 }
 

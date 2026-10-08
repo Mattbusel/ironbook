@@ -42,35 +42,13 @@ jobs:
           app=$(find dd/Build/Products -name "Ironbook.app" -path "*iphonesimulator*" | head -1)
           xcrun simctl install "$udid" "$app"
           mkdir -p shots
-          xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -shot train
-          sleep 7
-          xcrun simctl io "$udid" screenshot "shots/00.png"
-          xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -shot session
-          sleep 7
-          xcrun simctl io "$udid" screenshot "shots/01.png"
-          xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -shot history
-          sleep 7
-          xcrun simctl io "$udid" screenshot "shots/02.png"
-          xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -shot progress
-          sleep 7
-          xcrun simctl io "$udid" screenshot "shots/03.png"
-          xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -shot records
-          sleep 7
-          xcrun simctl io "$udid" screenshot "shots/04.png"
-          xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -shot timer
-          sleep 7
-          xcrun simctl io "$udid" screenshot "shots/05.png"
-          for s in paywall locked programs; do
+          i=0
+          for shot in train session timer finish poster history progress records block shop theme widgets settings lift paywall locked programs; do
             xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
-            xcrun simctl launch "$udid" com.mattbusel.ironbook -shot $s
-            sleep 7
-            xcrun simctl io "$udid" screenshot "shots/$s.png"
+            xcrun simctl launch "$udid" com.mattbusel.ironbook -shot $shot
+            sleep 8
+            xcrun simctl io "$udid" screenshot "shots/$(printf %02d $i)-$shot.png"
+            i=$((i+1))
           done
       - uses: actions/upload-artifact@v4
         if: always()

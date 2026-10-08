@@ -1,28 +1,5 @@
 import SwiftUI
 
-/// Chalk on iron. A blackboard in a gym: chalk dust, red tape, gold for records.
-enum Chalk {
-    static let board = Color(red: 0.043, green: 0.043, blue: 0.047)      // #0B0B0C
-    static let slate = Color(red: 0.086, green: 0.086, blue: 0.094)      // cards
-    static let slateHi = Color(red: 0.125, green: 0.125, blue: 0.137)
-    static let white = Color(red: 0.96, green: 0.95, blue: 0.92)
-    static let dust = Color(red: 0.96, green: 0.95, blue: 0.92).opacity(0.55)
-    static let faint = Color(red: 0.96, green: 0.95, blue: 0.92).opacity(0.22)
-    static let line = Color(red: 0.96, green: 0.95, blue: 0.92).opacity(0.10)
-    static let red = Color(red: 0.90, green: 0.22, blue: 0.20)           // tape
-    static let redDeep = Color(red: 0.55, green: 0.10, blue: 0.10)
-    static let gold = Color(red: 0.98, green: 0.80, blue: 0.20)
-    static let green = Color(red: 0.36, green: 0.82, blue: 0.48)
-}
-
-extension Font {
-    /// Big hand-lettered feel: rounded, black, italic.
-    static func slab(_ size: CGFloat) -> Font { .system(size: size, weight: .black, design: .rounded) }
-    static func chalk(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font { .system(size: size, weight: weight, design: .rounded) }
-    static func digits(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font { .system(size: size, weight: weight, design: .rounded).monospacedDigit() }
-    static func mono(_ size: CGFloat) -> Font { .system(size: size, weight: .medium, design: .monospaced) }
-}
-
 /// The blackboard: near black, chalk dust in the corners, faint smears.
 struct BoardBackground: View {
     var body: some View {
@@ -54,7 +31,7 @@ struct Tape: View {
         Text(text.uppercased())
             .font(.chalk(12, .black))
             .tracking(2.2)
-            .foregroundStyle(Chalk.white)
+            .foregroundStyle(Chalk.onTape)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .background(
@@ -114,7 +91,7 @@ struct TapeButton: View {
                 if let icon { Image(systemName: icon).font(.system(size: 15, weight: .black)) }
                 Text(title.uppercased()).font(.chalk(14, .black)).tracking(1.5)
             }
-            .foregroundStyle(fill == Chalk.gold ? Chalk.board : Chalk.white)
+            .foregroundStyle(fill == Chalk.gold ? Chalk.board : fill == Chalk.red ? Chalk.onTape : Chalk.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(fill).shadow(color: fill.opacity(0.35), radius: 14, y: 6))
@@ -154,7 +131,7 @@ struct BoardTabBar: View {
                         Image(systemName: t.icon).font(.system(size: 18, weight: selection == t ? .black : .medium))
                         Text(t.rawValue.uppercased()).font(.chalk(9, .black)).tracking(1)
                     }
-                    .foregroundStyle(selection == t ? Chalk.white : Chalk.faint)
+                    .foregroundStyle(selection == t ? Chalk.onTape : Chalk.faint)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                     .background(
@@ -186,20 +163,3 @@ struct PRBadge: View {
     }
 }
 
-struct Star: Shape {
-    var points: Int
-    var inner: CGFloat
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        let c = CGPoint(x: rect.midX, y: rect.midY)
-        let r = min(rect.width, rect.height) / 2
-        for i in 0..<(points * 2) {
-            let a = CGFloat(i) * .pi / CGFloat(points) - .pi / 2
-            let rr = i % 2 == 0 ? r : r * inner
-            let pt = CGPoint(x: c.x + cos(a) * rr, y: c.y + sin(a) * rr)
-            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
-        }
-        p.closeSubpath()
-        return p
-    }
-}

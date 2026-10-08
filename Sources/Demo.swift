@@ -1,6 +1,14 @@
 import Foundation
 
 /// Sixteen weeks of believable training, used for screenshots and the review recording.
+extension Store {
+    /// A couple of notes, so the screenshots show what they're for.
+    func exercisesNotes() {
+        guard let i = sessions.indices.last, !sessions[i].exercises.isEmpty else { return }
+        sessions[i].exercises[0].note = "Pause at the bottom. Elbows tucked."
+    }
+}
+
 enum Demo {
     static func fill(_ s: Store) {
         s.templates = Store.starterTemplates
@@ -30,6 +38,11 @@ enum Demo {
             }
         }
         s.sessions = sessions
+        s.weeklyGoal = 3
+        s.blockCredits = 1
+        s.posterCredits = 2
+        s.shieldCredits = 1
+        s.exercisesNotes()
         // A workout in progress, two sets in, beating last week.
         var live = Session(name: "Upper A", exercises: s.templates[0].exercises.map { e in ExerciseEntry(name: e.name, sets: (0..<e.sets).map { _ in SetEntry() }) })
         live.exercises[0].sets = [SetEntry(weight: 110, reps: 6, done: true), SetEntry(weight: 110, reps: 6, done: true), SetEntry(weight: 107.5, reps: 6, done: false), SetEntry()]

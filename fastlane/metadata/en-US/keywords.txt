@@ -1,1 +1,1 @@
-workout,gym,lifting,strength,log,tracker,powerlifting,1rm,bench,squat,deadlift,progress
+lifting,strength,weightlifting,powerlifting,1rm,bench,squat,deadlift,tracker,plates,program,progress

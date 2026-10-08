@@ -3,6 +3,8 @@ import StoreKit
 import Charts
 
 /// Ironbook Pro: one non-consumable. Logging is free forever; Pro is the analysis layer.
+/// Beside it, 99-cent extras: three consumables that get used up (Next Block, PR Posters, Week Shield)
+/// and one-time cosmetics (four tape colours with matching icons, PR Fireworks).
 ///
 /// People who paid for Ironbook before it went free keep everything. AppTransaction's
 /// originalPurchaseDate says when this Apple ID first got the app; anyone before the
@@ -12,42 +14,82 @@ import Charts
 @Observable
 final class Pro {
     static let productID = "com.mattbusel.ironbook.pro"
+    static let blockID = "com.mattbusel.ironbook.block"
+    static let posterID = "com.mattbusel.ironbook.posters"
+    static let shieldID = "com.mattbusel.ironbook.shield"
+    static let fireworksID = "com.mattbusel.ironbook.fireworks"
+    static func themeID(_ id: String) -> String { "com.mattbusel.ironbook.theme." + id }
+    static var allIDs: [String] {
+        [productID, blockID, posterID, shieldID, fireworksID] + TapePalette.all.filter { $0.id != "red" }.map { themeID($0.id) }
+    }
+    static let consumables: Set<String> = [blockID, posterID, shieldID]
     /// The price went to Free at 2026-09-25 15:18 UTC. Storefronts can take hours to catch up,
     /// so anyone who got the app before 18:18 UTC is treated as a buyer.
     static let wentFree = Date(timeIntervalSince1970: 1_790_360_309)
 
-    enum Reason: String, Identifiable { case progress, records, plates, programs, settings; var id: String { rawValue } }
+    enum Reason: String, Identifiable { case progress, records, plates, programs, settings, history, health, export, widget; var id: String { rawValue } }
 
     private(set) var unlocked: Bool
     private(set) var grandfathered = false
     private(set) var product: Product?
+    private(set) var products: [String: Product] = [:]
+    /// Non-consumable extras owned (themes, fireworks).
+    private(set) var owned: Set<String> = []
     var busy = false
+    var busyID: String? = nil
     var message: String?
     var paywall: Reason? = nil
+    /// Called once per consumable transaction, with its product id, so the store can bank the credit.
+    var onCredit: ((String) -> Void)?
 
     private var updates: Task<Void, Never>?
     private let key = "ironbook.pro.unlocked"
+    private let ownedKey = "ironbook.owned"
     private let forced: Bool
 
     /// `forced` is for screenshots and the review recording, which must not touch StoreKit.
-    init(forced: Bool? = nil) {
+    init(forced: Bool? = nil, extras: Bool = true) {
         self.forced = forced != nil
-        if let forced { unlocked = forced; return }
+        if let forced {
+            unlocked = forced
+            owned = extras && forced ? Set(Pro.allIDs).subtracting(Pro.consumables).subtracting([Pro.productID]) : []
+            return
+        }
         unlocked = UserDefaults.standard.bool(forKey: key)
+        owned = Set(UserDefaults.standard.stringArray(forKey: ownedKey) ?? [])
         updates = Task { [weak self] in
             for await result in Transaction.updates { await self?.apply(result) }
         }
         Task { await refresh() }
     }
 
-    var price: String { product?.displayPrice ?? "$9.99" }
+    var price: String { product?.displayPrice ?? "$4.99" }
+    func price(_ id: String) -> String { products[id]?.displayPrice ?? "$0.99" }
+    func ownsTheme(_ id: String) -> Bool { id == "red" || owned.contains(Pro.themeID(id)) }
+    var ownsFireworks: Bool { owned.contains(Pro.fireworksID) }
 
     func ask(_ why: Reason) { if !unlocked { paywall = why } }
 
+    func loadProducts() async {
+        guard !forced, products.count < Pro.allIDs.count else { return }
+        if let ps = try? await Product.products(for: Pro.allIDs) { for p in ps { products[p.id] = p } }
+        if product == nil { product = products[Pro.productID] }
+    }
+
     func refresh() async {
         guard !forced else { return }
+        await loadProducts()
         if product == nil { product = try? await Product.products(for: [Pro.productID]).first }
-        for await result in Transaction.currentEntitlements { await apply(result) }
+        var extras: Set<String> = []
+        for await result in Transaction.currentEntitlements {
+            if case .verified(let t) = result, t.productID != Pro.productID, t.revocationDate == nil, !Pro.consumables.contains(t.productID) { extras.insert(t.productID) }
+            await apply(result)
+        }
+        owned = extras
+        UserDefaults.standard.set(Array(extras), forKey: ownedKey)
+        if !ownsTheme(Shared.theme) { TapePalette.apply("red") }
+        // A consumable bought on a flaky connection may never have been finished.
+        for await result in Transaction.unfinished { await apply(result) }
         if case .verified(let app)? = try? await AppTransaction.shared,
            app.environment == .production, app.originalPurchaseDate < Pro.wentFree {
             grandfathered = true
@@ -55,22 +97,35 @@ final class Pro {
         }
     }
 
-    func buy() async {
-        guard !forced, !busy else { return }
-        busy = true; message = nil
-        defer { busy = false }
-        if product == nil { product = try? await Product.products(for: [Pro.productID]).first }
-        guard let product else {
+    func buy() async { _ = await buy(Pro.productID) }
+
+    /// True when the thing bought is in hand (or, for a consumable, banked).
+    @discardableResult
+    func buy(_ id: String) async -> Bool {
+        if forced {
+            if Pro.consumables.contains(id) { onCredit?(id) } else if id == Pro.productID { grant() } else { owned.insert(id) }
+            return true
+        }
+        guard !busy else { return false }
+        busy = true; busyID = id; message = nil
+        defer { busy = false; busyID = nil }
+        await loadProducts()
+        guard let product = products[id] ?? (id == Pro.productID ? product : nil) else {
             message = "The App Store did not answer. Check your connection and try again."
-            return
+            return false
         }
         do {
             switch try await product.purchase() {
             case .success(let result):
                 await apply(result)
-                if !unlocked { message = "Apple could not confirm the purchase. Try Restore in a minute." }
+                if id == Pro.productID {
+                    if !unlocked { message = "Apple could not confirm the purchase. Try Restore in a minute." }
+                    return unlocked
+                }
+                if case .verified = result { UINotificationFeedbackGenerator().notificationOccurred(.success); return true }
+                message = "Apple could not confirm the purchase. You were not charged twice; try again in a minute."
             case .pending:
-                message = "Waiting for approval. Pro unlocks by itself once it is approved."
+                message = "Waiting for approval. It arrives by itself once it is approved."
             case .userCancelled:
                 break
             @unknown default:
@@ -79,6 +134,7 @@ final class Pro {
         } catch {
             message = "The purchase did not go through: \(error.localizedDescription)"
         }
+        return false
     }
 
     func restore() async {
@@ -91,13 +147,31 @@ final class Pro {
             return
         }
         await refresh()
-        message = unlocked ? "Pro is unlocked. Welcome back." : "No Pro purchase found on this Apple ID."
+        message = unlocked ? "Pro is unlocked. Welcome back." : owned.isEmpty ? "No Pro purchase found on this Apple ID." : "Your extras are restored."
     }
 
     private func apply(_ result: VerificationResult<StoreKit.Transaction>) async {
-        guard case .verified(let t) = result, t.productID == Pro.productID else { return }
-        if t.revocationDate == nil { grant() } else if !grandfathered { revoke() }
+        guard case .verified(let t) = result else { return }
+        if t.productID == Pro.productID {
+            if t.revocationDate == nil { grant() } else if !grandfathered { revoke() }
+        } else if Pro.consumables.contains(t.productID) {
+            credit(t)
+        } else if Pro.allIDs.contains(t.productID) {
+            if t.revocationDate == nil { owned.insert(t.productID) } else { owned.remove(t.productID) }
+            UserDefaults.standard.set(Array(owned), forKey: ownedKey)
+        }
         await t.finish()
+    }
+
+    /// Bank a consumable once per transaction, however many times StoreKit reports it.
+    private func credit(_ t: StoreKit.Transaction) {
+        guard t.revocationDate == nil else { return }
+        let d = UserDefaults.standard
+        var seen = Set(d.stringArray(forKey: "ironbook.credited") ?? [])
+        guard !seen.contains(String(t.id)) else { return }
+        seen.insert(String(t.id))
+        d.set(Array(seen), forKey: "ironbook.credited")
+        onCredit?(t.productID)
     }
 
     private func grant() {
@@ -145,9 +219,12 @@ struct PaywallView: View {
                     teaser
                     VStack(alignment: .leading, spacing: 14) {
                         feature("chart.line.uptrend.xyaxis", "Progress charts", "Estimated one-rep max per lift, PR sessions in gold, weekly volume.")
-                        feature("trophy.fill", "Records wall", "Every lift ranked: est. 1RM, best set, heaviest set.")
-                        feature("circle.grid.cross.fill", "Plate maths", "Type the load, get the plates per side for any bar.")
+                        feature("trophy.fill", "The whole records wall", "Every lift ranked: est. 1RM, best set, heaviest set. Free shows your top three.")
+                        feature("clock.arrow.circlepath", "Lift history", "Tap any lift for every session you've done it, set by set.")
                         feature("list.bullet.rectangle.portrait.fill", "Program library", "5×5, push pull legs, upper lower and more, ready to start.")
+                        feature("heart.fill", "Apple Health", "Finished workouts saved to Health as strength training.")
+                        feature("rectangle.split.2x1.fill", "The bigger week widget", "Your week, your streak and your latest PR on the Home Screen.")
+                        feature("tablecells", "CSV export", "Every set you've ever logged, in a spreadsheet.")
                     }
                     .slate()
                     priceBlock
@@ -176,8 +253,11 @@ struct PaywallView: View {
     var headline: String {
         switch reason {
         case .records: return "Your wall of fame is waiting."
-        case .plates: return "Stop doing plate maths in your head."
         case .programs: return "Proven programs, one tap away."
+        case .history: return "Every time you've lifted it."
+        case .health: return "Your lifting, in Apple Health."
+        case .export: return "Your whole book, as a spreadsheet."
+        case .widget: return "Your week on the Home Screen."
         default: return "See the line go up."
         }
     }
@@ -300,7 +380,7 @@ struct ProCard: View {
             .frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 3) {
                 Text(pro.unlocked ? "Ironbook Pro" : "Ironbook Pro, \(pro.price) once").font(.slab(17)).italic().foregroundStyle(Chalk.white)
-                Text(pro.unlocked ? (pro.grandfathered ? "Unlocked. Thanks for buying Ironbook early." : "Unlocked. Thank you.") : "Charts, records, plate maths, programs.")
+                Text(pro.unlocked ? (pro.grandfathered ? "Unlocked. Thanks for buying Ironbook early." : "Unlocked. Thank you.") : "Charts, records, programs, Health, export.")
                     .font(.chalk(12, .medium)).foregroundStyle(Chalk.dust)
                 if let m = pro.message, pro.paywall == nil { Text(m).font(.chalk(11.5, .semibold)).foregroundStyle(Chalk.gold) }
             }

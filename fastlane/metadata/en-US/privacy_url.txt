@@ -1,1 +1,1 @@
-https://mattbusel.github.io/app-pages/ironbook/privacy.html
+https://app-pages-one.vercel.app/ironbook/privacy.html

@@ -7,7 +7,7 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    MARKETING_VERSION: "1.1"
+    MARKETING_VERSION: "1.2"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
     CODE_SIGN_STYLE: Manual
@@ -18,15 +18,27 @@ targets:
   Ironbook:
     type: application
     platform: iOS
+    dependencies:
+      - target: IronbookWidgets
     sources:
       - path: Sources
       - path: Resources/PrivacyInfo.xcprivacy
         buildPhase: resources
       - path: Resources/Assets.xcassets
         buildPhase: resources
+    entitlements:
+      path: Resources/Ironbook.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.mattbusel.ironbook
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mattbusel.ironbook
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: "AppIcon-Cobalt AppIcon-Volt AppIcon-Rose AppIcon-Bone"
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: YES
+        PROVISIONING_PROFILE_SPECIFIER: "${APP_PROFILE}"
         PRODUCT_NAME: Ironbook
         INFOPLIST_KEY_CFBundleDisplayName: Ironbook
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -45,6 +57,37 @@ targets:
         UIUserInterfaceStyle: Dark
         UIStatusBarStyle: UIStatusBarStyleLightContent
         ITSAppUsesNonExemptEncryption: false
+        NSSupportsLiveActivities: true
+        NSHealthUpdateUsageDescription: "Ironbook can save each finished workout to Apple Health as strength training, with its start and end time. Only if you turn it on in Settings."
+        NSHealthShareUsageDescription: "Ironbook does not read anything from Apple Health. It only saves finished workouts, if you turn that on."
+  IronbookWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Sources/Shared
+      - path: Resources/PrivacyInfo.xcprivacy
+        buildPhase: resources
+    entitlements:
+      path: Widgets/IronbookWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.com.mattbusel.ironbook
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mattbusel.ironbook.widgets
+        PRODUCT_NAME: IronbookWidgets
+        PROVISIONING_PROFILE_SPECIFIER: "${EXT_PROFILE}"
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Ironbook
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
 schemes:
   Ironbook:
     build:

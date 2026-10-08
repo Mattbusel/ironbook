@@ -32,11 +32,18 @@ final class Autopilot {
                 await send(c, then: 1.6)
             }
             await wait(1.5)
-            await send("live.finish", then: 3)
+            await send("live.finish", then: 5)
             router.showLive = false
             await wait(1.5)
             router.tab = .history; await wait(2)
             router.tab = .records; await wait(2)
+            router.tab = .train; await wait(1)
+            router.showBlock = true; await wait(4)
+            router.showBlock = false; await wait(1)
+            router.showShop = true; await wait(4)
+            router.showShop = false; await wait(1)
+            router.showSettings = true; await wait(3)
+            router.showSettings = false; await wait(1)
             let done = URL.documentsDirectory.appending(path: "demo_done")
             try? Data("ok".utf8).write(to: done)
         }

@@ -132,14 +132,19 @@ struct ProgressTab: View {
 
 struct RecordsView: View {
     @Environment(Store.self) private var store
+    @Environment(Pro.self) private var pro
+    @Environment(Router.self) private var router
     var body: some View {
-        let recs = store.records
+        let all = store.records
+        // Free shows the top three; Pro shows the whole wall. Nothing is hidden from the log itself.
+        let recs = pro.unlocked ? all : Array(all.prefix(3))
         Page {
             PageHeader(tape: "Wall of fame", title: "Records.")
-            if recs.isEmpty {
+            if all.isEmpty {
                 Text("Records appear once you have logged sets with weight and reps.").font(.chalk(14, .medium)).foregroundStyle(Chalk.dust).slate()
             }
             ForEach(Array(recs.enumerated()), id: \.element.id) { i, r in
+                Button { if pro.unlocked { router.liftHistory = LiftName(name: r.name) } else { pro.ask(.history) } } label: {
                 HStack(spacing: 14) {
                     ZStack {
                         Star(points: 12, inner: 0.74).fill(i == 0 ? Chalk.gold : Chalk.slateHi)
@@ -158,6 +163,20 @@ struct RecordsView: View {
                     }
                 }
                 .slate(padding: 14)
+                }.buttonStyle(.plain)
+            }
+            if !pro.unlocked && all.count > 3 {
+                Button { pro.ask(.records) } label: {
+                    HStack(spacing: 12) {
+                        ZStack { Star(points: 12, inner: 0.74).fill(Chalk.gold); Image(systemName: "lock.fill").font(.system(size: 12, weight: .black)).foregroundStyle(Chalk.board) }.frame(width: 40, height: 40)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(all.count - 3) more on the wall").font(.slab(17)).italic().foregroundStyle(Chalk.white)
+                            Text("Pro shows every lift, and every session of each one.").font(.chalk(12, .medium)).foregroundStyle(Chalk.dust)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .black)).foregroundStyle(Chalk.gold)
+                    }.slate(padding: 14)
+                }.buttonStyle(.plain)
             }
         }
     }
