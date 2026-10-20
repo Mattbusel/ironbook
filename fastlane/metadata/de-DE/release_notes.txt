@@ -1,0 +1,17 @@
+Das bisher größte Update für Ironbook.
+
+Neu in dieser Version
+• Ironbook Plus, monatlich oder jährlich: alles aus Pro, dazu Muskelbalance-Analyse, monatliche Auffüllung mit Next Blocks, PR-Postern und Wochenschilden, alle Tape-Farben, PR-Feuerwerk und iCloud-Backup. Wer Pro hat, behält Pro
+• Jeden Monat eine neue Challenge, mit Goldmedaillen und einer Medaillenwand
+• 1RM-Rechner mit allen Prozentwerten
+• Sperrbildschirm-Widgets und eine Taste im Kontrollzentrum, die dein nächstes Workout startet
+• Siri und Kurzbefehle: "Start my workout in Ironbook", "How is my week in Ironbook"
+• Pausentimer auf dem Sperrbildschirm und in der Dynamic Island, mit Vibration, wenn die Pause vorbei ist
+• Wochenziel und Wochenserie, mit einem Serienschutz jeden Monat inklusive
+• Aufwärmsätze mit einem Tipp, Notizen zu jeder Übung, eine Auswahlliste gängiger Übungen
+• Ein richtiger Abschlussbildschirm, der jeden PR hervorhebt
+• Wochen-Widget für den Home-Bildschirm
+• Next-Block-Pläne aus deinen eigenen Zahlen, PR-Poster, Wochenschilde, Tape-Farben mit passenden Symbolen, PR-Feuerwerk
+• Dezimalkommas funktionieren jetzt in Gewichtsfeldern
+
+Alles, was du bisher protokolliert hast, bleibt erhalten.

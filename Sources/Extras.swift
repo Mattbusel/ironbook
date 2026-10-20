@@ -397,7 +397,7 @@ struct FinishSheet: View {
                     }
                     let goalLeft = store.weeklyGoal - store.sessionsIn(weekOf: .now)
                     Text(goalLeft > 0 ? "\(goalLeft) more this week for the goal." : "Weekly goal hit. \(store.streakWeeks)-week streak.").font(.chalk(14, .black)).foregroundStyle(goalLeft > 0 ? Chalk.dust : Chalk.gold)
-                    let c = Challenge.current(unit: store.unit)
+                    let c = store.challenge
                     HStack(spacing: 10) {
                         Image(systemName: medal ? "medal.fill" : c.icon).foregroundStyle(Chalk.gold).symbolEffect(.bounce, value: medal)
                         Text(medal ? "\(c.title) done. A new medal is on your wall." : "\(c.title): \(fmtProgress(store.progress(c), c)) of \(fmtProgress(c.goal, c)).")

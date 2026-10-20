@@ -1,0 +1,1 @@
+journal,fitness,exercise,routine,diary,barbell,dumbbell,muscle,plate,split,max,record,progress,kg

@@ -375,7 +375,8 @@ struct Challenge {
     let start: Date
     let end: Date
 
-    static func current(unit: String, now: Date = .now) -> Challenge {
+    /// `last`: last month's volume and working sets, so the volume and set goals grow with the person (10% over last month).
+    static func current(unit: String, last: (volume: Double, sets: Double) = (0, 0), now: Date = .now) -> Challenge {
         let cal = Store.iso
         let start = cal.date(from: cal.dateComponents([.year, .month], from: now))!
         let end = cal.date(byAdding: .month, value: 1, to: start)!
@@ -387,9 +388,11 @@ struct Challenge {
         let goal: Double
         switch kind {
         case .prs: goal = 3
-        case .volume: goal = unit == "lb" ? 90_000 : 40_000
+        case .volume:
+            let floor = unit == "lb" ? 45_000.0 : 20_000.0
+            goal = max(floor, (last.volume * 1.1 / 5_000).rounded(.up) * 5_000)
         case .sessions: goal = 12
-        case .sets: goal = 150
+        case .sets: goal = max(100, (last.sets * 1.1 / 10).rounded(.up) * 10)
         }
         return Challenge(key: String(Store.dayKey.string(from: start).prefix(7)), month: f.string(from: start), kind: kind, goal: goal, start: start, end: end)
     }
@@ -405,9 +408,9 @@ struct Challenge {
     func detail(unit: String) -> String {
         switch kind {
         case .prs: return "Set 3 personal records in \(month). Any lift counts."
-        case .volume: return "Move \(fmtVolume(goal)) \(unit) in \(month). Every working set counts."
+        case .volume: return "Move \(fmtGoal(goal)) \(unit) in \(month), 10% more than last month. Every working set counts."
         case .sessions: return "Train 12 times in \(month). Three a week gets you there."
-        case .sets: return "Log 150 working sets in \(month). Warm-ups do not count."
+        case .sets: return "Log \(Int(goal)) working sets in \(month), 10% more than last month. Warm-ups do not count."
         }
     }
     var icon: String {
@@ -422,6 +425,15 @@ struct Challenge {
 }
 
 extension Store {
+    /// This month's challenge, its goal set from last month's training.
+    var challenge: Challenge {
+        let cal = Store.iso
+        let start = cal.date(from: cal.dateComponents([.year, .month], from: .now))!
+        let prev = cal.date(byAdding: .month, value: -1, to: start)!
+        let ss = sessions.filter { $0.date >= prev && $0.date < start }
+        return Challenge.current(unit: unit, last: (ss.reduce(0) { $0 + $1.volume }, Double(ss.reduce(0) { $0 + $1.setCount })))
+    }
+
     func progress(_ c: Challenge) -> Double {
         let ss = sessions.filter { $0.date >= c.start && $0.date < c.end }
         switch c.kind {
@@ -439,7 +451,7 @@ extension Store {
     }
     /// Banks this month's medal once the challenge is done. True the first time.
     @discardableResult func checkMedal() -> Bool {
-        let c = Challenge.current(unit: unit)
+        let c = challenge
         guard !medals.contains(c.key), progress(c) >= c.goal else { return false }
         medals.append(c.key); save()
         return true
@@ -450,7 +462,7 @@ struct ChallengeCard: View {
     @Environment(Store.self) private var store
     @Environment(Router.self) private var router
     var body: some View {
-        let c = Challenge.current(unit: store.unit)
+        let c = store.challenge
         let p = store.progress(c)
         let done = store.medals.contains(c.key) || p >= c.goal
         Button { router.showChallenge = true } label: {
@@ -479,7 +491,13 @@ struct ChallengeCard: View {
     }
 }
 
-func fmtProgress(_ v: Double, _ c: Challenge) -> String { c.kind == .volume ? fmtVolume(v) : String(Int(v)) }
+func fmtProgress(_ v: Double, _ c: Challenge) -> String { c.kind == .volume ? fmtGoal(v) : String(Int(v)) }
+/// 40000 as "40k", 98900 as "98.9k".
+func fmtGoal(_ v: Double) -> String {
+    guard v >= 10_000 else { return String(Int(v.rounded())) }
+    let k = v / 1000
+    return (k == k.rounded() ? String(Int(k)) : String(format: "%.1f", k)) + "k"
+}
 
 struct ChallengeBar: View {
     let value: Double
@@ -503,7 +521,7 @@ struct ChallengeSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var poster: UIImage? = nil
     var body: some View {
-        let c = Challenge.current(unit: store.unit)
+        let c = store.challenge
         let p = store.progress(c)
         let won = store.medals.contains(c.key) || p >= c.goal
         NavigationStack {
@@ -893,7 +911,7 @@ struct CalcSheet: View {
                         if one > 0 {
                             VStack(alignment: .leading, spacing: 8) {
                                 Eyebrow("Working weights")
-                                ForEach([95, 90, 85, 80, 75, 70, 65, 60, 50], id: \.self) { pct in
+                                ForEach([95, 90, 85, 80, 75, 70, 65, 60], id: \.self) { pct in
                                     let load = store.roundLoad(one * Double(pct) / 100)
                                     let reps = max(1, Int((30 * (100 / Double(pct) - 1)).rounded()))
                                     HStack {

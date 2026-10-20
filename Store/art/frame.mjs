@@ -6,59 +6,69 @@ import { readFileSync, readdirSync, rmSync, mkdirSync } from "fs";
 
 const src = process.argv[2];
 const loc = process.argv[3] || "en-US";
-const out = `C:/Users/Matthew/ironbook/fastlane/screenshots/${loc}`;
+const out = process.argv[4] && process.argv[4] !== "main" ? `C:/Users/Matthew/ironbook/Store/art/cpp/${process.argv[4]}` : `C:/Users/Matthew/ironbook/fastlane/screenshots/${loc}`;
+// No prices, "free", discounts or subscription words in any caption (App Review 2.3.7).
+// An optional 5th item picks a set: `node frame.mjs <shots> <locale> [set]` with set = main | lifter | starter (custom product pages).
 const plan = [
   ["session", "LIVE", "Know what<br>to beat.", "Last time's numbers <b>beside every set.</b>"],
-  ["widgets", "LOCK SCREEN", "Rest timer on<br>your Lock Screen.", "And your week <b>on the Home Screen.</b>"],
-  ["train", "THIS WEEK", "Hit your week.", "A weekly goal and streak, <b>warm-ups and plate maths.</b>"],
-  ["poster", "NEW PR", "Every PR,<br>in gold.", "Called out, <b>then shared.</b>"],
-  ["block", "NEXT BLOCK", "Your next four<br>weeks, planned.", "Targets from <b>your own numbers.</b>"],
-  ["progress", "PRO", "See the line<br>go up.", "Est. one-rep max, <b>PRs in gold.</b>"],
+  ["widgets", "LOCK SCREEN", "Your rest timer<br>on the Lock Screen.", "And your week <b>as a ring.</b>"],
+  ["train", "THIS WEEK", "Hit the week.<br>Keep the streak.", "A weekly goal and <b>a monthly challenge.</b>"],
+  ["challenge", "MONTHLY", "A new challenge<br>every month.", "Finish it, <b>win the medal.</b>"],
+  ["poster", "NEW PR", "Every PR,<br>in gold.", "Called out, <b>made to share.</b>"],
+  ["balance", "INSIGHTS", "See every<br>muscle's week.", "Sets per muscle and <b>the lifts climbing fastest.</b>"],
+  ["progress", "PROGRESS", "Watch the line<br>go up.", "Est. one-rep max, <b>PRs in gold.</b>"],
+  ["block", "NEXT BLOCK", "Four weeks,<br>planned for you.", "Targets from <b>your own numbers.</b>"],
+  ["calc", "1RM", "Your max<br>from any set.", "Every percentage, <b>every plate.</b>"],
   ["records", "WALL OF FAME", "Every lift,<br>ranked.", "Best set, heaviest set, <b>est. 1RM.</b>"],
-  ["history", "THE BOOK", "The whole book.", "Every session, <b>one tap to repeat.</b>"],
-  ["theme", "TAPE", "Pick your tape.", "Four colours, each with <b>its own icon.</b>"],
-  ["paywall", "NO SUBSCRIPTION", "Free to log.<br>Pro is $4.99 once.", "Charts, records, programs, <b>yours for good.</b>"],
 ];
 // Captions for the Japanese, Korean and Simplified Chinese store pages; the app screens themselves stay English.
 const L10N = {
   "ja": [
     ["session", "ライブ", "超えるべき<br>数字がわかる。", "すべてのセットの横に<b>前回の記録。</b>"],
-    ["widgets", "ロック画面", "休憩タイマーを<br>ロック画面に。", "1週間の記録は<b>ホーム画面に。</b>"],
-    ["train", "今週", "今週の目標を<br>達成しよう。", "週の目標とストリーク、<b>ウォームアップとプレート計算。</b>"],
+    ["widgets", "ロック画面", "休憩タイマーを<br>ロック画面に。", "1週間の記録も<b>リングで。</b>"],
+    ["train", "今週", "週の目標と<br>ストリーク。", "毎週の目標と<b>月間チャレンジ。</b>"],
+    ["challenge", "月間", "毎月、新しい<br>チャレンジ。", "達成すれば<b>メダル獲得。</b>"],
     ["poster", "自己ベスト", "自己ベストは<br>ゴールドで。", "お祝いして、<b>シェアしよう。</b>"],
+    ["balance", "分析", "部位ごとの<br>1週間を見る。", "部位別セット数と<b>伸びている種目。</b>"],
+    ["progress", "推移", "伸びていく<br>グラフを見よう。", "推定1RMと、<b>ゴールドの自己ベスト。</b>"],
     ["block", "NEXT BLOCK", "次の4週間を<br>計画しよう。", "目標は<b>自分の数字から。</b>"],
-    ["progress", "PRO", "伸びていく<br>グラフを見よう。", "推定1RMと、<b>ゴールドの自己ベスト。</b>"],
+    ["calc", "1RM", "どのセットからも<br>MAXを計算。", "すべての%と<b>プレート計算。</b>"],
     ["records", "殿堂入り", "全種目を<br>ランキング。", "ベストセット、最重量、<b>推定1RM。</b>"],
-    ["history", "記録帳", "すべてを<br>1冊に。", "どのセッションも<b>ワンタップでもう一度。</b>"],
-    ["theme", "テープ", "テープを選ぼう。", "4色、それぞれに<b>専用アイコン。</b>"],
-    ["paywall", "サブスクなし", "記録は無料。<br>Proは買い切り。", "グラフ、記録、プログラムが<b>ずっと使える。</b>"],
   ],
   "ko": [
     ["session", "실시간", "넘어야 할<br>숫자를 한눈에.", "모든 세트 옆에 <b>지난 기록.</b>"],
-    ["widgets", "잠금 화면", "잠금 화면에<br>휴식 타이머.", "한 주 기록은 <b>홈 화면에.</b>"],
-    ["train", "이번 주", "이번 주<br>목표 달성.", "주간 목표와 연속 기록, <b>워밍업과 원판 계산.</b>"],
+    ["widgets", "잠금 화면", "잠금 화면에<br>휴식 타이머.", "한 주 기록도 <b>링으로.</b>"],
+    ["train", "이번 주", "주간 목표와<br>연속 기록.", "매주 목표와 <b>월간 챌린지.</b>"],
+    ["challenge", "월간", "매달 새로운<br>챌린지.", "완료하면 <b>메달 획득.</b>"],
     ["poster", "새 PR", "모든 PR을<br>골드로.", "축하하고, <b>공유하고.</b>"],
+    ["balance", "분석", "부위별<br>한 주 보기.", "부위별 세트 수와 <b>가장 빨리 느는 종목.</b>"],
+    ["progress", "진행", "올라가는<br>그래프.", "예상 1RM, <b>골드로 빛나는 PR.</b>"],
     ["block", "NEXT BLOCK", "다음 4주를<br>계획대로.", "목표는 <b>내 기록에서.</b>"],
-    ["progress", "PRO", "올라가는<br>그래프.", "예상 1RM, <b>골드로 빛나는 PR.</b>"],
+    ["calc", "1RM", "어떤 세트로도<br>1RM 계산.", "모든 퍼센트와 <b>원판 계산.</b>"],
     ["records", "명예의 전당", "모든 종목,<br>순위대로.", "최고 세트, 최고 중량, <b>예상 1RM.</b>"],
-    ["history", "운동 일지", "모든 기록을<br>한 권에.", "모든 세션을 <b>탭 한 번으로 다시.</b>"],
-    ["theme", "테이프", "테이프 고르기.", "4가지 색, 각각 <b>전용 아이콘.</b>"],
-    ["paywall", "구독 없음", "기록은 무료.<br>Pro는 한 번 결제.", "그래프, 기록, 프로그램을 <b>평생.</b>"],
   ],
   "zh-Hans": [
     ["session", "实时", "知道这次<br>要超越什么。", "每一组旁边都有<b>上次的数字。</b>"],
-    ["widgets", "锁屏", "休息计时<br>就在锁屏上。", "一周训练<b>放在主屏幕。</b>"],
-    ["train", "本周", "完成本周目标。", "每周目标与连续记录,<b>热身组和配片计算。</b>"],
+    ["widgets", "锁屏", "休息计时<br>就在锁屏上。", "一周训练<b>化作圆环。</b>"],
+    ["train", "本周", "每周目标,<br>连续不断。", "每周目标与<b>每月挑战。</b>"],
+    ["challenge", "每月", "每个月,<br>新的挑战。", "完成即可<b>赢得奖牌。</b>"],
     ["poster", "新 PR", "每个 PR,<br>都是金色。", "点出来,<b>再分享。</b>"],
+    ["balance", "分析", "每块肌肉的<br>一周训练量。", "各部位组数与<b>进步最快的动作。</b>"],
+    ["progress", "进步", "看着曲线<br>往上走。", "预估 1RM,<b>金色的 PR。</b>"],
     ["block", "NEXT BLOCK", "接下来四周,<br>都安排好了。", "目标来自<b>你自己的数据。</b>"],
-    ["progress", "PRO", "看着曲线<br>往上走。", "预估 1RM,<b>金色的 PR。</b>"],
+    ["calc", "1RM", "任意一组<br>算出极限。", "每个百分比,<b>每片杠铃片。</b>"],
     ["records", "名人堂", "每个动作,<br>都有排名。", "最佳组、最大重量、<b>预估 1RM。</b>"],
-    ["history", "训练簿", "完整的训练簿。", "每次训练,<b>一键再练。</b>"],
-    ["theme", "胶带", "选择你的胶带。", "四种颜色,各有<b>专属图标。</b>"],
-    ["paywall", "没有订阅", "记录免费。<br>Pro 一次买断。", "图表、纪录、训练计划,<b>永久拥有。</b>"],
   ],
 };
-const steps = loc === "en-US" ? plan : L10N[loc];
+// Custom product page sets (en-US captions, different order and lead): who each page is for.
+const SETS = {
+  main: null,
+  lifter: ["calc", "progress", "block", "records", "balance", "session", "poster", "widgets"],
+  starter: ["train", "session", "challenge", "widgets", "poster", "calc", "progress", "records"],
+};
+const setName = process.argv[4] || "main";
+const base = loc === "en-US" ? plan : L10N[loc];
+const steps = SETS[setName] ? SETS[setName].map((k) => base.find((x) => x[0] === k)) : base;
 const cjk = { ja: "Noto Sans JP", ko: "Noto Sans KR", "zh-Hans": "Noto Sans SC" }[loc];
 const files = readdirSync(src);
 rmSync(out, { recursive: true, force: true });

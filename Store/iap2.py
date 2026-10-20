@@ -33,6 +33,8 @@ PRODUCTS = [
      "Consumable, one credit per purchase. Settings has a weekly session goal; meeting it builds a week streak. When last week "
      "fell short, the Train tab shows a shield card: everyone gets one free shield a month, and Week Shield ($0.99) is for an extra. "
      "Also in the shop: " + SHOP),
+    ("shield3", "CONSUMABLE", "Shield Pack x3", "Three Week Shields to keep your streak.", "shield",
+     "Consumable, three Week Shield credits per purchase. Same use as Week Shield (see that product's note). Listed in the shop: " + SHOP),
     ("theme.cobalt", "NON_CONSUMABLE", "Cobalt Tape", "Blue tape for the app and widgets, with its icon.", "theme", THEME_NOTE),
     ("theme.volt", "NON_CONSUMABLE", "Volt Tape", "Green tape for the app and widgets, with its icon.", "theme", THEME_NOTE),
     ("theme.rose", "NON_CONSUMABLE", "Rose Tape", "Pink tape for the app and widgets, with its icon.", "theme", THEME_NOTE),
@@ -42,6 +44,7 @@ PRODUCTS = [
      "A Try button previews it once bought."),
 ]
 PRICE = "0.99"
+PRICE_OF = {"shield3": "1.99"}
 BASE = "com.mattbusel.ironbook."
 
 
@@ -77,7 +80,8 @@ def create():
         sched = asc.call("GET", f"/v2/inAppPurchases/{iid}/iapPriceSchedule", quiet=True)
         if not sched or not sched.get("data"):
             points = asc.call("GET", f"/v2/inAppPurchases/{iid}/pricePoints", params={"filter[territory]": "USA", "limit": 200})
-            pp = next((d["id"] for d in (points or {}).get("data", []) if d["attributes"].get("customerPrice") == PRICE), None)
+            want = PRICE_OF.get(suffix, PRICE)
+            pp = next((d["id"] for d in (points or {}).get("data", []) if d["attributes"].get("customerPrice") == want), None)
             r = pp and asc.call("POST", "/v1/inAppPurchasePriceSchedules", {
                 "data": {"type": "inAppPurchasePriceSchedules", "relationships": {
                     "inAppPurchase": {"data": {"type": "inAppPurchases", "id": iid}},
@@ -85,7 +89,7 @@ def create():
                     "manualPrices": {"data": [{"type": "inAppPurchasePrices", "id": "${p1}"}]}}},
                 "included": [{"type": "inAppPurchasePrices", "id": "${p1}", "attributes": {"startDate": None},
                               "relationships": {"inAppPurchasePricePoint": {"data": {"type": "inAppPurchasePricePoints", "id": pp}}}}]})
-            print("  price", f"${PRICE}" if r else "FAILED")
+            print("  price", f"${want}" if r else "FAILED")
         avail = asc.call("GET", f"/v2/inAppPurchases/{iid}/inAppPurchaseAvailability", quiet=True)
         if not avail or not avail.get("data"):
             terr = terr or [t["id"] for t in asc.call("GET", "/v1/territories", params={"limit": 200})["data"]]

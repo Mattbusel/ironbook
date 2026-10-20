@@ -1,0 +1,1 @@
+peso,forza,bodybuilding,panca,squat,stacco,1rm,calcolatore,timer,manubrio,bilanciere,gym,massimale

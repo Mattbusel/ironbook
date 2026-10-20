@@ -1,14 +1,17 @@
 The biggest Ironbook update yet.
 
+New in this version
+• Ironbook Plus, monthly or yearly: everything in Pro, plus muscle balance insights, a monthly refill of Next Blocks, PR posters and Week Shields, every tape colour, PR Fireworks and iCloud backup. Pro owners keep Pro
+• A new challenge every month, with gold medals and a medal wall
+• 1RM calculator with every percentage worked out
+• Lock Screen widgets, and a Control Center button that starts your next workout
+• Siri and Shortcuts: "Start my workout in Ironbook" and "How is my week in Ironbook"
 • Rest timer on the Lock Screen and in the Dynamic Island, with a buzz when it's up
-• Weekly goal and week streak, with a free streak shield every month
-• One-tap warm-up sets
-• Plate maths is now free, with the bar drawn out
-• Notes on any lift, shown again next time
-• A pick-list of common lifts when you add an exercise
+• Weekly goal and week streak, with one streak shield included every month
+• One-tap warm-up sets, notes on any lift, a pick-list of common lifts
 • A proper finish screen that calls out every PR
 • Home Screen week widget
-• Pro is now $4.99 and adds lift history, Apple Health and CSV export
-• New 99-cent extras: Next Block plans from your own numbers, PR posters, week shields, tape colours with matching icons, PR fireworks
+• Next Block plans from your own numbers, PR posters, Week Shields, tape colours with matching icons, PR Fireworks
+• Decimal commas now work in weight fields
 
 Everything you've logged carries over.

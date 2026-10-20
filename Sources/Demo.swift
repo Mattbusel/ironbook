@@ -37,6 +37,12 @@ enum Demo {
                 sessions.append(Session(name: t.name, date: date, minutes: 50 + Int(rnd() * 20), exercises: ex))
             }
         }
+        // The latest one lands this week, so the week ring is under way.
+        if var last = sessions.popLast() {
+            let weekStart = Store.iso.dateInterval(of: .weekOfYear, for: .now)!.start
+            last.date = max(weekStart.addingTimeInterval(3600), Date.now.addingTimeInterval(-3 * 3600))
+            sessions.append(last)
+        }
         s.sessions = sessions
         s.weeklyGoal = 3
         s.blockCredits = 1

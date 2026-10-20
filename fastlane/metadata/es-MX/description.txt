@@ -1,0 +1,53 @@
+Ironbook es un registro de entrenamiento con el look de un pizarrón de gimnasio: gis sobre fierro, cinta y dorado para los récords.
+
+Lo que importa de un registro es saber, frente a la barra, qué hiciste la última vez. Ironbook pone ese número junto a cada serie, muestra tu temporizador de descanso en la pantalla bloqueada y dibuja la línea que sube.
+
+GRATIS, PARA SIEMPRE
+• Entrenamientos, plantillas e historial ilimitados
+• Cada serie muestra peso y repeticiones de la sesión anterior; palomea una serie vacía y se copian
+• Temporizador de descanso en la pantalla bloqueada y en la Dynamic Island, con vibración cuando toca
+• Un reto nuevo cada mes, con medalla de oro al completarlo
+• Series de calentamiento calculadas por ti: barra vacía, 40, 60 y 80 %
+• Calculadora de 1RM con todos los porcentajes, y cálculo de discos con la barra dibujada por lado, en kg o lb
+• Notas en cualquier ejercicio, y la de la última vez aparece al repetirlo
+• Una meta semanal, una racha de semanas y un escudo de racha gratis cada mes
+• Una pantalla final que destaca cada PR
+• Tus tres mejores récords, el widget semanal chico, widgets de pantalla bloqueada y un botón del Centro de control
+• Siri y Atajos: "Start my workout in Ironbook", "How is my week in Ironbook"
+
+IRONBOOK PRO, UN DESBLOQUEO ÚNICO
+• Progreso: 1RM estimado en el tiempo, sesiones con PR en dorado, la serie más pesada de cada sesión, volumen semanal
+• El muro completo de récords y todas las sesiones de cada ejercicio
+• Biblioteca de programas: 5x5, push pull legs, torso pierna, cuerpo completo de tres días y solo mancuernas
+• Guarda tus entrenamientos en la app Salud
+• El widget semanal grande con tu PR más reciente y lo que sigue
+• Exportación CSV de cada serie
+
+IRONBOOK PLUS, MENSUAL O ANUAL
+Todo lo de Pro, y además:
+• Equilibrio muscular: series efectivas por músculo cada semana frente a la guía de 10 a 20 series, y los ejercicios que más rápido suben
+• Recarga mensual cada día 1: 1 Next Block, 3 pósters de PR y 2 escudos semanales
+• Todos los colores de cinta y los fuegos artificiales de PR mientras estés suscrito
+• Respaldo en iCloud de todo tu registro: un teléfono nuevo sigue donde te quedaste
+• Un póster para compartir por cada medalla de reto
+¿Ya tienes Pro? Lo conservas. Plus solo agrega los extras mensuales.
+
+PEQUEÑOS EXTRAS
+• Next Block: cuatro semanas de una plantilla con un objetivo en cada ejercicio, calculado con tus mejores números. Volumen, construcción, pesado, descarga
+• Pósters de PR: un póster dorado estilo pizarrón de un nuevo PR, tres por paquete
+• Escudo semanal y paquete de escudos: conserva tu racha tras una semana corta
+• Colores de cinta, cada uno con su ícono de app a juego: Cobalt, Volt, Rose y Bone
+• Fuegos artificiales de PR en cada nueva marca
+
+PRECIOS Y CONDICIONES DE SUSCRIPCIÓN
+Registrar es gratis. Pro: $4.99, un solo pago. Ironbook Plus: $2.99 al mes o $14.99 al año, y el plan anual empieza con una prueba gratuita de 1 semana para nuevos suscriptores. Extras: $0.99 (paquete de escudos $1.99). Precios en dólares estadounidenses; pueden variar en tu país.
+El pago se carga a tu Apple ID cuando confirmas la compra o cuando termina una prueba gratuita. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo actual, y la renovación se cobra a tu cuenta en las 24 horas previas a ese final. Adminístrala o cancélala cuando quieras en Configuración > tu nombre > Suscripciones. Cualquier parte no usada de una prueba gratuita termina al comprar una suscripción.
+
+¿Compraste Ironbook antes de que fuera gratis? Pro ya es tuyo.
+
+kg o lb. Sin cuenta, sin anuncios, sin rastreo. Tu registro se queda en tu teléfono (y en tu propio iCloud, con Plus).
+
+Términos de uso (EULA estándar de Apple): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Política de privacidad: https://tensorust.com/apps/ironbook/privacy/
+
+Nota: por ahora, las pantallas de la app están en inglés.
