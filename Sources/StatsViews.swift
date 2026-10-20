@@ -64,6 +64,7 @@ struct ProgressTab: View {
         let pts = store.progress(name)
         Page {
             PageHeader(tape: "Line going up", title: "Progress.")
+            InsightsCard()
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(names, id: \.self) { n in
@@ -137,14 +138,14 @@ struct RecordsView: View {
     var body: some View {
         let all = store.records
         // Free shows the top three; Pro shows the whole wall. Nothing is hidden from the log itself.
-        let recs = pro.unlocked ? all : Array(all.prefix(3))
+        let recs = pro.full ? all : Array(all.prefix(3))
         Page {
             PageHeader(tape: "Wall of fame", title: "Records.")
             if all.isEmpty {
                 Text("Records appear once you have logged sets with weight and reps.").font(.chalk(14, .medium)).foregroundStyle(Chalk.dust).slate()
             }
             ForEach(Array(recs.enumerated()), id: \.element.id) { i, r in
-                Button { if pro.unlocked { router.liftHistory = LiftName(name: r.name) } else { pro.ask(.history) } } label: {
+                Button { if pro.full { router.liftHistory = LiftName(name: r.name) } else { pro.ask(.history) } } label: {
                 HStack(spacing: 14) {
                     ZStack {
                         Star(points: 12, inner: 0.74).fill(i == 0 ? Chalk.gold : Chalk.slateHi)
@@ -165,7 +166,7 @@ struct RecordsView: View {
                 .slate(padding: 14)
                 }.buttonStyle(.plain)
             }
-            if !pro.unlocked && all.count > 3 {
+            if !pro.full && all.count > 3 {
                 Button { pro.ask(.records) } label: {
                     HStack(spacing: 12) {
                         ZStack { Star(points: 12, inner: 0.74).fill(Chalk.gold); Image(systemName: "lock.fill").font(.system(size: 12, weight: .black)).foregroundStyle(Chalk.board) }.frame(width: 40, height: 40)

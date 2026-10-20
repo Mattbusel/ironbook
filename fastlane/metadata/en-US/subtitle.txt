@@ -1,1 +1,1 @@
-Gym log, PRs and rest timer
+Gym tracker, PRs, rest timer

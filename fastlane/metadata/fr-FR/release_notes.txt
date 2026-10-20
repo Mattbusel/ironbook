@@ -1,0 +1,17 @@
+La plus grosse mise à jour d'Ironbook à ce jour.
+
+Nouveautés de cette version
+• Ironbook Plus, mensuel ou annuel : tout Pro, plus l'analyse de l'équilibre musculaire, une recharge mensuelle de Next Blocks, posters de PR et boucliers de semaine, toutes les couleurs de ruban, les feux d'artifice de PR et la sauvegarde iCloud. Si vous avez Pro, vous le gardez
+• Un nouveau défi chaque mois, avec des médailles d'or et un mur des médailles
+• Calculateur de 1RM avec tous les pourcentages
+• Des widgets pour l'écran verrouillé, et un bouton dans le Centre de contrôle qui lance votre prochaine séance
+• Siri et Raccourcis : "Start my workout in Ironbook", "How is my week in Ironbook"
+• Minuteur de repos sur l'écran verrouillé et dans la Dynamic Island, avec une vibration à la fin
+• Objectif hebdomadaire et semaines consécutives, avec un bouclier inclus chaque mois
+• Séries d'échauffement en un geste, notes sur chaque exercice, liste d'exercices courants à choisir
+• Un vrai écran de fin qui signale chaque PR
+• Widget de la semaine pour l'écran d'accueil
+• Plans Next Block tirés de vos propres chiffres, posters de PR, boucliers de semaine, couleurs de ruban avec icônes assorties, feux d'artifice de PR
+• La virgule décimale fonctionne maintenant dans les champs de poids
+
+Tout ce que vous avez enregistré est conservé.

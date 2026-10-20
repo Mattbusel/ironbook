@@ -16,10 +16,34 @@ final class Autopilot {
     }
     @MainActor private func wait(_ s: Double) async { try? await Task.sleep(for: .seconds(s)) }
 
+    /// The App Store preview: about 26 seconds of the real app, start to finish.
+    @MainActor
+    func preview(_ store: Store, _ router: Router) {
+        Task { @MainActor in
+            await wait(2.5)
+            store.start(store.templates[0]); router.showLive = true
+            await wait(2)
+            for c in ["live.tick.0.0.5", "live.tick.0.1.5", "live.tick.0.2.5"] { await send(c, then: 1.3) }
+            await wait(0.8)
+            await send("live.finish", then: 4.2)
+            router.showLive = false
+            await wait(1)
+            router.tab = .progress; await wait(2.4)
+            router.showInsights = true; await wait(2.8)
+            router.showInsights = false; await wait(0.8)
+            router.tab = .train; router.showChallenge = true; await wait(2.8)
+            router.showChallenge = false; await wait(0.8)
+            router.showcase = true; await wait(3)
+            let done = URL.documentsDirectory.appending(path: "demo_done")
+            try? Data("ok".utf8).write(to: done)
+        }
+    }
+
     @MainActor
     func run(_ store: Store, _ router: Router) {
         guard Autopilot.on, !running else { return }
         running = true
+        if ProcessInfo.processInfo.arguments.contains("-preview") { store.live = nil; store.liveStart = nil; preview(store, router); return }
         Task { @MainActor in
             await wait(3)
             router.tab = .history; await wait(2.5)

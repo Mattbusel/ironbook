@@ -1,0 +1,1 @@
+entrenamiento,gym,fuerza,ejercicio,press,banca,sentadilla,peso,muerto,1rm,calculadora,mancuerna

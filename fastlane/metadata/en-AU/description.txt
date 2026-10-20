@@ -1,0 +1,51 @@
+Ironbook is a workout log with the look of a gym blackboard: chalk on iron, tape, gold for records.
+
+The whole point of a training log is knowing what you did last time while you stand at the bar. Ironbook puts that number next to every set, runs your rest timer on the Lock Screen, and draws the line going up.
+
+FREE, FOREVER
+• Unlimited workouts, templates and history
+• Every set shows last session's weight and reps; tick a set and it copies them if you left them blank
+• Rest timer on the Lock Screen and in the Dynamic Island, with a buzz when it's time
+• A new challenge every month, with a gold medal when you finish it
+• Warm-up sets worked out for you: empty bar, 40, 60 and 80 percent
+• 1RM calculator with every percentage worked out, and plate maths with the bar drawn per side, in kg or lb
+• Notes on any lift, and last time's note shown when you do it again
+• A weekly goal, a week streak, and one free streak shield every month
+• A finish screen that calls out every PR
+• Your top three records, the small week widget, Lock Screen widgets and a Control Center button
+• Siri and Shortcuts: "Start my workout in Ironbook", "How is my week in Ironbook"
+
+IRONBOOK PRO, A ONE-TIME UNLOCK
+• Progress: estimated one-rep max over time, PR sessions in gold, heaviest set per session, weekly volume
+• The whole records wall, and every session of every lift
+• Program library: 5x5, push pull legs, upper lower, three-day full body and dumbbells only
+• Save workouts to Apple Health
+• The bigger week widget with your latest PR and what's next
+• CSV export of every set
+
+IRONBOOK PLUS, MONTHLY OR YEARLY
+Everything in Pro, and:
+• Muscle balance: working sets per muscle each week against the 10 to 20 set guide, and the lifts climbing fastest
+• A monthly refill on the 1st: 1 Next Block, 3 PR posters and 2 Week Shields
+• Every tape colour and PR Fireworks, while you subscribe
+• iCloud backup of your whole log, so a new phone picks up where you left off
+• A shareable poster for every challenge medal
+Already own Pro? You keep it. Plus only adds the monthly extras on top.
+
+LITTLE EXTRAS
+• Next Block: four weeks of a template with a target on every lift, worked out from your own best numbers. Volume, build, heavy, deload
+• PR Posters: a gold chalkboard poster of a new PR, three to a pack
+• Week Shield and Shield Pack: keep your streak after a short week
+• Tape colours, each with a matching app icon: Cobalt, Volt, Rose and Bone
+• PR Fireworks over every new best
+
+PRICES AND SUBSCRIPTION TERMS
+Logging is free. Pro is $4.99 once. Ironbook Plus is $2.99 a month or $14.99 a year, and the yearly plan starts with a 1-week free trial for new subscribers. Extras are $0.99 (Shield Pack $1.99). Prices are in US dollars and may differ in your country.
+Payment is charged to your Apple ID when you confirm the purchase, or when a free trial ends. A subscription renews automatically unless it is cancelled at least 24 hours before the end of the current period, and your account is charged for the renewal within the 24 hours before the period ends. Manage or cancel anytime in Settings > your name > Subscriptions. Any unused part of a free trial ends when you buy a subscription.
+
+Bought Ironbook before it went free? Pro is already yours.
+
+kg or lb. No account, no ads, no tracking. Your log stays on your phone (and in your own iCloud, with Plus).
+
+Terms of Use (Apple standard EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Privacy Policy: https://tensorust.com/apps/ironbook/privacy/

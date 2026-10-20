@@ -1,5 +1,6 @@
 import ActivityKit
 import HealthKit
+import StoreKit
 import SwiftUI
 import UserNotifications
 import WidgetKit
@@ -128,6 +129,7 @@ struct SettingsSheet: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Tape, blocks and extras").font(.slab(17)).italic().foregroundStyle(Chalk.white)
                                     Text("Next Block \(store.blockCredits) · posters \(store.posterCredits) · shields \(store.shieldCredits)").font(.chalk(12, .medium)).foregroundStyle(Chalk.dust)
+                                    if pro.plus { Text("Plus: every tape is yours, credits refill monthly").font(.chalk(11, .bold)).foregroundStyle(Chalk.gold) }
                                 }
                                 Spacer()
                                 Image(systemName: "chevron.right").font(.system(size: 13, weight: .black)).foregroundStyle(Chalk.red)
@@ -135,22 +137,24 @@ struct SettingsSheet: View {
                         }.buttonStyle(.plain)
 
                         VStack(alignment: .leading, spacing: 14) {
-                            HStack { Eyebrow("Pro"); Spacer(); if !pro.unlocked { Tape(text: "Pro", tilt: 3) } }
+                            HStack { Eyebrow("Pro and Plus"); Spacer(); if !pro.full { Tape(text: "Pro", tilt: 3) } }
                             Toggle(isOn: Binding(get: { store.healthOn }, set: { on in
-                                guard pro.unlocked else { dismiss(); DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { pro.ask(.health) }; return }
+                                guard pro.full else { dismiss(); DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { pro.ask(.health) }; return }
                                 if on { Task { if await HealthLog.authorize() { store.healthOn = true; store.save() } } } else { store.healthOn = false; store.save() }
                             })) { Text("Save workouts to Apple Health").font(.chalk(15, .bold)).foregroundStyle(Chalk.white) }.tint(Chalk.red)
                             Text("Each finished workout is written to Health as traditional strength training, with its start and end time. Ironbook reads nothing from Health.").font(.chalk(11.5, .medium)).foregroundStyle(Chalk.faint)
-                            if pro.unlocked, let csv {
+                            if pro.full, let csv {
                                 ShareLink(item: csv) { Label("Export every set as CSV", systemImage: "tablecells").font(.chalk(14, .black)).foregroundStyle(Chalk.red) }
-                            } else if !pro.unlocked {
+                            } else if !pro.full {
                                 Button { dismiss(); DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { pro.ask(.export) } } label: { Label("Export every set as CSV", systemImage: "tablecells").font(.chalk(14, .black)).foregroundStyle(Chalk.dust) }.buttonStyle(.plain)
                             }
                         }.slate()
 
+                        BackupCard()
+
                         VStack(alignment: .leading, spacing: 8) {
-                            Eyebrow("Widgets and the rest timer")
-                            Text("Touch and hold the Home Screen, tap Edit, then Add Widget, and pick Ironbook. The small week widget is free; the bigger one comes with Pro. The rest timer shows on the Lock Screen and in the Dynamic Island while it runs.").font(.chalk(13, .medium)).foregroundStyle(Chalk.dust)
+                            Eyebrow("Widgets, Siri and the rest timer")
+                            Text("Home Screen: touch and hold, tap Edit, then Add Widget, and pick Ironbook. The small week widget and the Lock Screen ring are free; the bigger one comes with Pro or Plus. Control Center has a Start workout button. Ask Siri to \"Start my workout in Ironbook\". The rest timer shows on the Lock Screen and in the Dynamic Island while it runs.").font(.chalk(13, .medium)).foregroundStyle(Chalk.dust)
                         }.slate()
 
                         ProCard()
@@ -185,11 +189,16 @@ struct ShopSheet: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
                         Tape(text: "The extras shelf")
-                        Text("Small things, \(pro.price(Pro.blockID)) each.").font(.slab(30)).italic().foregroundStyle(Chalk.white)
+                        Text("Small things, for good or used up.").font(.slab(30)).italic().foregroundStyle(Chalk.white).fixedSize(horizontal: false, vertical: true)
+                        if pro.plus {
+                            Label("Plus: every tape and Fireworks are yours, and credits refill on the 1st of each month.", systemImage: "crown.fill")
+                                .font(.chalk(12.5, .bold)).foregroundStyle(Chalk.gold).fixedSize(horizontal: false, vertical: true)
+                        }
                         Eyebrow("Used up as you go")
                         credit(icon: "square.stack.3d.up.fill", title: "Next Block", detail: "Four weeks of a template with a target on every lift, worked out from your own best numbers. One credit, one block.", have: store.blockCredits, id: Pro.blockID)
                         credit(icon: "photo.artframe", title: "PR Posters ×3", detail: "A gold chalkboard poster of a new PR, made to share. Three per pack.", have: store.posterCredits, id: Pro.posterID)
                         credit(icon: "shield.lefthalf.filled", title: "Week Shield", detail: "Keeps your weekly streak when a week comes up short. One free every month; this is for the extra.", have: store.shieldCredits, id: Pro.shieldID)
+                        credit(icon: "shield.checkered", title: "Shield Pack ×3", detail: "Three Week Shields in one go, for the travel months.", have: 0, id: Pro.shieldPackID)
                         Eyebrow("Yours for good")
                         LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                             ForEach(TapePalette.all) { p in tapeCard(p) }
@@ -361,6 +370,8 @@ struct FinishSheet: View {
     let prs: [PRHit]
     @State private var poster: UIImage? = nil
     @State private var burst = 0
+    @State private var medal = false
+    @Environment(\.requestReview) private var requestReview
     var body: some View {
         ZStack {
             BoardBackground()
@@ -386,6 +397,12 @@ struct FinishSheet: View {
                     }
                     let goalLeft = store.weeklyGoal - store.sessionsIn(weekOf: .now)
                     Text(goalLeft > 0 ? "\(goalLeft) more this week for the goal." : "Weekly goal hit. \(store.streakWeeks)-week streak.").font(.chalk(14, .black)).foregroundStyle(goalLeft > 0 ? Chalk.dust : Chalk.gold)
+                    let c = store.challenge
+                    HStack(spacing: 10) {
+                        Image(systemName: medal ? "medal.fill" : c.icon).foregroundStyle(Chalk.gold).symbolEffect(.bounce, value: medal)
+                        Text(medal ? "\(c.title) done. A new medal is on your wall." : "\(c.title): \(fmtProgress(store.progress(c), c)) of \(fmtProgress(c.goal, c)).")
+                            .font(.chalk(13, .bold)).foregroundStyle(medal ? Chalk.gold : Chalk.dust)
+                    }
                     if let top = prs.first {
                         if let poster {
                             Image(uiImage: poster).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 14)).shadow(color: Chalk.gold.opacity(0.3), radius: 20)
@@ -412,6 +429,11 @@ struct FinishSheet: View {
         }
         .onAppear {
             if !prs.isEmpty { UINotificationFeedbackGenerator().notificationOccurred(.success); burst += 1 }
+            if store.checkMedal() { medal = true; burst += 1 }
+            // A good moment to ask for a rating: a new PR, a few workouts in, once per version.
+            if !prs.isEmpty, ReviewAsk.due(store.sessions.count) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { requestReview() }
+            }
             if ProcessInfo.processInfo.arguments.contains("poster"), let p = prs.first { poster = PosterView.render(pr: p, unit: store.unit) }
         }
     }
@@ -456,6 +478,7 @@ struct Celebration: View {
     let trigger: Int
     let fireworks: Bool
     @State private var start: Date? = nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         TimelineView(.animation(paused: start == nil)) { tl in
             Canvas { ctx, size in
@@ -489,7 +512,10 @@ struct Celebration: View {
                 }
             }
         }
-        .onChange(of: trigger) { _, _ in start = .now; DispatchQueue.main.asyncAfter(deadline: .now() + 2.7) { start = nil } }
+        .onChange(of: trigger) { _, _ in
+            guard !reduceMotion else { return }
+            start = .now; DispatchQueue.main.asyncAfter(deadline: .now() + 2.7) { start = nil }
+        }
     }
 }
 
@@ -588,6 +614,19 @@ enum RestLive {
     }
 }
 
+// MARK: - Rating prompt
+
+enum ReviewAsk {
+    static func due(_ workouts: Int) -> Bool {
+        let a = ProcessInfo.processInfo.arguments
+        guard workouts >= 3, !a.contains("-shot"), !a.contains("-demoAutoplay") else { return false }
+        let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+        guard UserDefaults.standard.string(forKey: "ironbook.reviewAsked") != v else { return false }
+        UserDefaults.standard.set(v, forKey: "ironbook.reviewAsked")
+        return true
+    }
+}
+
 // MARK: - Screenshot only
 
 /// The widgets on a home screen, for the store screenshot. The real widgets draw the same views.
@@ -602,6 +641,14 @@ struct WidgetShowcase: View {
                     Text(Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day())).font(.chalk(17, .semibold)).foregroundStyle(.white.opacity(0.8))
                     Text("9:41").font(.system(size: 84, weight: .bold, design: .rounded)).foregroundStyle(.white.opacity(0.9))
                 }.padding(.top, 50)
+                HStack(spacing: 14) {
+                    WeekRingAccessory(snap: snap).frame(width: 64, height: 64)
+                        .background(Circle().fill(.white.opacity(0.14)))
+                    WeekRectAccessory(snap: snap).padding(.horizontal, 12).padding(.vertical, 8).frame(width: 230, height: 64)
+                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(.white.opacity(0.14)))
+                }
+                .foregroundStyle(.white).tint(.white)
+                .environment(\.colorScheme, .dark)
                 RestLockPreview().padding(.horizontal, 18)
                 HStack(spacing: 22) {
                     tile(WeekSmallView(snap: snap), w: 170, h: 170)

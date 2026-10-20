@@ -37,11 +37,21 @@ enum Demo {
                 sessions.append(Session(name: t.name, date: date, minutes: 50 + Int(rnd() * 20), exercises: ex))
             }
         }
+        // The latest one lands this week, so the week ring is under way.
+        if var last = sessions.popLast() {
+            let weekStart = Store.iso.dateInterval(of: .weekOfYear, for: .now)!.start
+            last.date = max(weekStart.addingTimeInterval(3600), Date.now.addingTimeInterval(-3 * 3600))
+            sessions.append(last)
+        }
         s.sessions = sessions
+        // Last week is covered, so the screenshots show the streak rather than the shield offer.
+        s.shields = [s.weekKey(cal.date(byAdding: .day, value: -7, to: .now)!)]
         s.weeklyGoal = 3
         s.blockCredits = 1
         s.posterCredits = 2
         s.shieldCredits = 1
+        // Three medals already on the wall: the last three months' challenges.
+        s.medals = (1...3).map { i in String(Store.dayKey.string(from: cal.date(byAdding: .month, value: -i, to: .now)!).prefix(7)) }
         s.exercisesNotes()
         // A workout in progress, two sets in, beating last week.
         var live = Session(name: "Upper A", exercises: s.templates[0].exercises.map { e in ExerciseEntry(name: e.name, sets: (0..<e.sets).map { _ in SetEntry() }) })

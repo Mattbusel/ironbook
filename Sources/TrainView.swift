@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct TrainView: View {
     @Environment(Store.self) private var store
@@ -34,12 +35,14 @@ struct TrainView: View {
             }
 
             WeekCard()
+            TipView(LockScreenTip()).tint(Chalk.red)
             if let s = store.shieldable { ShieldCard(week: s.week, lost: s.lost) }
+            ChallengeCard()
 
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     Eyebrow("Templates"); Spacer()
-                    GhostButton(title: "Programs", icon: pro.unlocked ? "books.vertical" : "lock.fill") { router.showPrograms = true }
+                    GhostButton(title: "Programs", icon: pro.full ? "books.vertical" : "lock.fill") { router.showPrograms = true }
                     GhostButton(title: "New", icon: "plus") { newTemplate() }
                 }
                 ForEach(store.templates) { t in TemplateRow(template: t) }
@@ -47,7 +50,7 @@ struct TrainView: View {
             }
 
             BlockCard()
-            PlateCard()
+            ToolsCard()
             ProCard()
         }
     }
@@ -113,12 +116,15 @@ struct WeekCard: View {
                 }
                 HStack(spacing: 6) {
                     Image(systemName: "flame.fill").font(.system(size: 12, weight: .black)).foregroundStyle(store.streakWeeks > 0 ? Chalk.gold : Chalk.faint)
+                        .symbolEffect(.bounce, value: store.streakWeeks)
                     Text(store.streakWeeks > 0 ? "\(store.streakWeeks)-week streak" : done >= goal ? "Goal hit this week" : "\(goal - done) to go this week")
                         .font(.chalk(13, .black)).foregroundStyle(Chalk.white)
                 }
             }
         }
         .slate(padding: 14)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("This week: \(done) of \(goal) sessions. " + (store.streakWeeks > 0 ? "\(store.streakWeeks)-week streak." : ""))
     }
 }
 
@@ -142,7 +148,7 @@ struct ShieldCard: View {
             if !done {
                 HStack(spacing: 10) {
                     if store.freeShieldLeft || store.shieldCredits > 0 {
-                        TapeButton(title: store.freeShieldLeft ? "Use this month's free shield" : "Use a shield (\(store.shieldCredits) left)", icon: "shield.fill", fill: Chalk.gold) {
+                        TapeButton(title: store.freeShieldLeft ? "Use this month's shield" : "Use a shield (\(store.shieldCredits) left)", icon: "shield.fill", fill: Chalk.gold) {
                             if store.shield(week) { withAnimation(.spring) { done = true } }
                         }
                     } else {
@@ -195,7 +201,7 @@ struct PlateCard: View {
     var body: some View {
         let lb = store.unit == "lb"
         let barW = bar ?? (lb ? 45 : 20)
-        let plates = PlateCard.solve(Double(load) ?? 0, bar: barW, lb: lb)
+        let plates = PlateCard.solve(Double(load.replacingOccurrences(of: ",", with: ".")) ?? 0, bar: barW, lb: lb)
         VStack(alignment: .leading, spacing: 12) {
             HStack { Eyebrow("Plate maths"); Spacer(); Text("per side").font(.chalk(10, .black)).foregroundStyle(Chalk.faint) }
             HStack(spacing: 10) {

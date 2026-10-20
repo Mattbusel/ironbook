@@ -6,6 +6,11 @@ name: Review video
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "review (full walkthrough) or preview (App Store app preview, about 26 s)"
+        required: false
+        default: review
 
 jobs:
   record:
@@ -56,7 +61,12 @@ jobs:
           rec=$!
           sleep 4
 
-          xcrun simctl launch "$udid" com.mattbusel.ironbook -demoAutoplay
+          if [ "${{ inputs.mode }}" = "preview" ]; then
+            xcrun simctl ui "$udid" appearance dark || true
+            xcrun simctl launch "$udid" com.mattbusel.ironbook -demoAutoplay -preview
+          else
+            xcrun simctl launch "$udid" com.mattbusel.ironbook -demoAutoplay
+          fi
           data=$(xcrun simctl get_app_container "$udid" com.mattbusel.ironbook data)
           status=1
           for i in $(seq 1 600); do
