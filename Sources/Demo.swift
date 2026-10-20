@@ -42,6 +42,8 @@ enum Demo {
         s.blockCredits = 1
         s.posterCredits = 2
         s.shieldCredits = 1
+        // Three medals already on the wall: the last three months' challenges.
+        s.medals = (1...3).map { i in String(Store.dayKey.string(from: cal.date(byAdding: .month, value: -i, to: .now)!).prefix(7)) }
         s.exercisesNotes()
         // A workout in progress, two sets in, beating last week.
         var live = Session(name: "Upper A", exercises: s.templates[0].exercises.map { e in ExerciseEntry(name: e.name, sets: (0..<e.sets).map { _ in SetEntry() }) })

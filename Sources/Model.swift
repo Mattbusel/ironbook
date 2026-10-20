@@ -162,6 +162,12 @@ final class Store {
     var blockCredits = 0
     var posterCredits = 0
     var healthOn = false
+    /// Months (yyyy-MM) a Plus refill was banked.
+    var plusRefills: [String] = []
+    /// Months (yyyy-MM) whose challenge was finished.
+    var medals: [String] = []
+    /// Plus: back the log up to iCloud after each workout.
+    var cloudOn = true
     @ObservationIgnored var didSave: (() -> Void)?
 
     private var saveTask: Task<Void, Never>?
@@ -182,16 +188,16 @@ final class Store {
         var blockCredits: Int? = nil
         var posterCredits: Int? = nil
         var healthOn: Bool? = nil
+        var plusRefills: [String]? = nil
+        var medals: [String]? = nil
+        var cloudOn: Bool? = nil
     }
 
     init(demo: Bool) {
         self.demo = demo
         if demo { Demo.fill(self); return }
         if let d = try? Data(contentsOf: url), let disk = try? JSONDecoder().decode(Disk.self, from: d) {
-            templates = disk.templates; sessions = disk.sessions; live = disk.live; liveStart = disk.liveStart; unit = disk.unit; restSeconds = disk.restSeconds
-            weeklyGoal = disk.weeklyGoal ?? 3; shields = disk.shields ?? []; freeShieldMonths = disk.freeShieldMonths ?? []
-            shieldCredits = disk.shieldCredits ?? 0; blockCredits = disk.blockCredits ?? 0; posterCredits = disk.posterCredits ?? 0
-            healthOn = disk.healthOn ?? false
+            apply(disk)
         } else {
             templates = Store.starterTemplates
         }
@@ -203,12 +209,25 @@ final class Store {
         Template(name: "Full body", exercises: [.init(name: "Deadlift", sets: 3, reps: 5), .init(name: "Bench press", sets: 3, reps: 8), .init(name: "Squat", sets: 3, reps: 8), .init(name: "Pull-up", sets: 3, reps: 8), .init(name: "Plank", sets: 3, reps: 60)]),
     ]
 
+    func apply(_ disk: Disk) {
+        templates = disk.templates; sessions = disk.sessions; live = disk.live; liveStart = disk.liveStart; unit = disk.unit; restSeconds = disk.restSeconds
+        weeklyGoal = disk.weeklyGoal ?? 3; shields = disk.shields ?? []; freeShieldMonths = disk.freeShieldMonths ?? []
+        shieldCredits = disk.shieldCredits ?? 0; blockCredits = disk.blockCredits ?? 0; posterCredits = disk.posterCredits ?? 0
+        healthOn = disk.healthOn ?? false
+        plusRefills = disk.plusRefills ?? []; medals = disk.medals ?? []; cloudOn = disk.cloudOn ?? true
+    }
+
+    var disk: Disk {
+        Disk(templates: templates, sessions: sessions, live: live, liveStart: liveStart, unit: unit, restSeconds: restSeconds,
+             weeklyGoal: weeklyGoal, shields: shields, freeShieldMonths: freeShieldMonths, shieldCredits: shieldCredits,
+             blockCredits: blockCredits, posterCredits: posterCredits, healthOn: healthOn,
+             plusRefills: plusRefills, medals: medals, cloudOn: cloudOn)
+    }
+
     func save() {
         guard !demo else { didSave?(); return }
         saveTask?.cancel()
-        let disk = Disk(templates: templates, sessions: sessions, live: live, liveStart: liveStart, unit: unit, restSeconds: restSeconds,
-                        weeklyGoal: weeklyGoal, shields: shields, freeShieldMonths: freeShieldMonths, shieldCredits: shieldCredits,
-                        blockCredits: blockCredits, posterCredits: posterCredits, healthOn: healthOn)
+        let disk = self.disk
         let u = url
         saveTask = Task.detached(priority: .utility) { [weak self] in
             try? await Task.sleep(for: .milliseconds(250))
@@ -448,14 +467,20 @@ final class Store {
 
     func discard() { live = nil; liveStart = nil; save() }
 
+    /// The template after the one done last: what "Start next workout" starts.
+    var nextTemplate: Template? {
+        let recent = sessions.max { $0.date < $1.date }?.name
+        guard let i = templates.firstIndex(where: { $0.name == recent }) else { return templates.first }
+        return templates.isEmpty ? nil : templates[(i + 1) % templates.count]
+    }
+
     /// The summary the widgets draw.
     func snapshot(pro: Bool) -> WeekSnapshot {
         let lastPR = sessions.sorted { $0.date > $1.date }.lazy.compactMap { s -> (String, Double)? in
             for e in s.exercises where e.best > 0 && e.best >= self.bestE1RM(e.name, before: s.date) + 0.01 && self.bestE1RM(e.name, before: s.date) > 0 { return (e.name, e.best) }
             return nil
         }.first
-        let recent = sessions.max { $0.date < $1.date }?.name
-        let next = templates.first { $0.name != recent }?.name ?? templates.first?.name ?? "Start blank"
+        let next = nextTemplate?.name ?? "Start blank"
         return WeekSnapshot(goal: weeklyGoal, done: sessionsIn(weekOf: .now), days: daysThisWeek, streakWeeks: streakWeeks, nextTemplate: next,
                             lastPR: lastPR?.0 ?? "", lastPRValue: lastPR.map { fmtWeight($0.1.rounded()) } ?? "", unit: unit, pro: pro, updated: .now)
     }

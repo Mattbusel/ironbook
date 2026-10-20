@@ -81,6 +81,33 @@ struct RestLockView: View {
     }
 }
 
+/// Lock Screen: the week as a ring.
+struct WeekRingAccessory: View {
+    let snap: WeekSnapshot
+    var body: some View {
+        Gauge(value: Double(min(snap.done, max(1, snap.goal))), in: 0...Double(max(1, snap.goal))) {
+            Image(systemName: "dumbbell.fill")
+        } currentValueLabel: {
+            Text("\(snap.done)/\(snap.goal)").font(.system(size: 13, weight: .black, design: .rounded))
+        }
+        .gaugeStyle(.accessoryCircular)
+    }
+}
+
+/// Lock Screen: the week, the streak and what's next.
+struct WeekRectAccessory: View {
+    let snap: WeekSnapshot
+    var body: some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text("IRONBOOK").font(.system(size: 11, weight: .black, design: .rounded)).tracking(1.2)
+            Text("\(snap.done) of \(snap.goal) this week").font(.system(size: 15, weight: .heavy, design: .rounded))
+            Text(snap.streakWeeks > 0 ? "\(snap.streakWeeks)-week streak · next \(snap.nextTemplate)" : "Next: \(snap.nextTemplate)")
+                .font(.system(size: 12, weight: .semibold, design: .rounded)).lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 extension Array {
     subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
 }

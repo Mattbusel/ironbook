@@ -43,7 +43,7 @@ jobs:
           xcrun simctl install "$udid" "$app"
           mkdir -p shots
           i=0
-          for shot in train session timer finish poster history progress records block shop theme widgets settings lift paywall locked programs; do
+          for shot in train session timer finish poster history progress records block shop theme widgets settings lift paywall locked programs challenge balance calc; do
             xcrun simctl terminate "$udid" com.mattbusel.ironbook || true
             xcrun simctl launch "$udid" com.mattbusel.ironbook -shot $shot
             sleep 8

@@ -13,7 +13,7 @@ import asc  # noqa: E402
 
 APP = "com.mattbusel.ironbook"
 WIDGETS = "com.mattbusel.ironbook.widgets"
-WANT = {APP: ["APP_GROUPS", "HEALTHKIT"], WIDGETS: ["APP_GROUPS"]}
+WANT = {APP: ["APP_GROUPS", "HEALTHKIT", "ICLOUD"], WIDGETS: ["APP_GROUPS"]}
 
 
 def bundle(identifier: str, name: str):

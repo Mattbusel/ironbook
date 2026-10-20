@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 /// The workout in progress. Every set shows what you did last time so you know what to beat.
 struct LiveSessionView: View {
@@ -7,6 +8,7 @@ struct LiveSessionView: View {
     @Environment(Pro.self) private var pro
     @Environment(\.dismiss) private var dismiss
     @State private var restEnd: Date? = nil
+    @State private var restTotal: Double = 90
     @State private var now = Date.now
     @State private var addingExercise = false
     @State private var result: FinishResult? = nil
@@ -26,6 +28,7 @@ struct LiveSessionView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 18) {
                         header
+                        TipView(TickTip()).tint(Chalk.red)
                         ForEach(Array((store.live?.exercises ?? []).enumerated()), id: \.element.id) { ei, ex in
                             exerciseCard(ei, ex)
                         }
@@ -45,7 +48,7 @@ struct LiveSessionView: View {
         }
         .onReceive(clock) { now = $0 }
         .onAppear {
-            if router.showTimer && restEnd == nil { restEnd = Date.now.addingTimeInterval(67) }
+            if router.showTimer && restEnd == nil { restEnd = Date.now.addingTimeInterval(67); restTotal = Double(store.restSeconds) }
             if router.finishShot { router.finishShot = false; DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { finishWorkout() } }
         }
         .sheet(isPresented: $addingExercise) {
@@ -142,15 +145,19 @@ struct LiveSessionView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous).fill(st.done ? Chalk.green : Chalk.board)
                         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(st.done ? Chalk.green : Chalk.faint, lineWidth: 1.2))
-                    if isPR { PRBadge().scaleEffect(0.8) } else { Image(systemName: "checkmark").font(.system(size: 15, weight: .black)).foregroundStyle(st.done ? Chalk.board : Chalk.faint) }
+                    if isPR { PRBadge().scaleEffect(0.8) } else {
+                        Image(systemName: "checkmark").font(.system(size: 15, weight: .black)).foregroundStyle(st.done ? Chalk.board : Chalk.faint)
+                            .symbolEffect(.bounce, value: st.done)
+                    }
                 }
                 .frame(width: 44, height: 40)
             }.buttonStyle(.plain)
+            .accessibilityLabel(st.done ? (isPR ? "Set \(working) done, a new PR" : "Set \(working) done") : "Mark set \(working) done")
         }
     }
 
     func numberField(placeholder: String, value: Binding<Double?>) -> some View {
-        TextField(placeholder, text: Binding(get: { value.wrappedValue.map { fmtWeight($0) } ?? "" }, set: { value.wrappedValue = Double($0) }))
+        TextField(placeholder, text: Binding(get: { value.wrappedValue.map { fmtWeight($0) } ?? "" }, set: { value.wrappedValue = Double($0.replacingOccurrences(of: ",", with: ".")) }))
             .keyboardType(.decimalPad).multilineTextAlignment(.center).font(.digits(17)).foregroundStyle(Chalk.white)
             .frame(height: 40).background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Chalk.board))
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Chalk.line))
@@ -174,8 +181,10 @@ struct LiveSessionView: View {
         s.exercises[ei].sets[si] = st
         store.live = s; store.save()
         if st.done {
-            let end = Date.now.addingTimeInterval(TimeInterval(st.warmup ? min(60, store.restSeconds) : store.restSeconds))
+            let secs = st.warmup ? min(60, store.restSeconds) : store.restSeconds
+            let end = Date.now.addingTimeInterval(TimeInterval(secs))
             restEnd = end
+            restTotal = Double(secs)
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             if !router.demo {
                 RestLive.askOnce()
@@ -188,7 +197,7 @@ struct LiveSessionView: View {
 
     var restOverlay: some View {
         let left = max(0, Int((restEnd ?? now).timeIntervalSince(now).rounded()))
-        let total = Double(store.restSeconds)
+        let total = max(1, restTotal)
         let frac = restEnd == nil ? 0 : min(1, Double(left) / total)
         return VStack {
             Spacer()
@@ -205,7 +214,7 @@ struct LiveSessionView: View {
                         ForEach([60, 90, 120, 180], id: \.self) { s in
                             Button {
                                 store.restSeconds = s; store.save()
-                                let end = Date.now.addingTimeInterval(TimeInterval(s)); restEnd = end
+                                let end = Date.now.addingTimeInterval(TimeInterval(s)); restEnd = end; restTotal = Double(s)
                                 if !router.demo { RestLive.start(end: end, workout: store.live?.name ?? "Workout", next: "") }
                             } label: {
                                 Text(String(format: "%d:%02d", s / 60, s % 60)).font(.digits(12)).foregroundStyle(store.restSeconds == s ? Chalk.board : Chalk.dust)
@@ -278,7 +287,7 @@ extension LiveSessionView {
         RestLive.stop()
         restEnd = nil
         let r = store.finish()
-        if let saved = r.session, store.healthOn, pro.unlocked, !router.demo { Task { await HealthLog.save(saved) } }
+        if let saved = r.session, store.healthOn, pro.full, !router.demo { Task { await HealthLog.save(saved) } }
         result = FinishResult(prs: r.prs, session: r.session)
     }
 }

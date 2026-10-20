@@ -1,4 +1,5 @@
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
 
@@ -7,6 +8,7 @@ struct IronbookWidgetBundle: WidgetBundle {
     var body: some Widget {
         WeekWidget()
         RestLive()
+        if #available(iOS 18.0, *) { StartWorkoutControl() }
     }
 }
 
@@ -36,7 +38,7 @@ struct WeekWidget: Widget {
         }
         .configurationDisplayName("This week")
         .description("Sessions against your weekly goal and your streak. The bigger one adds your latest PR and what's next.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
@@ -44,7 +46,17 @@ struct WeekFamilyView: View {
     @Environment(\.widgetFamily) private var family
     let snap: WeekSnapshot
     var body: some View {
-        if family == .systemMedium {
+        content.widgetURL(URL(string: family == .systemMedium && snap.pro ? "ironbook://start-next" : "ironbook://train"))
+    }
+
+    @ViewBuilder var content: some View {
+        if family == .accessoryCircular {
+            WeekRingAccessory(snap: snap)
+        } else if family == .accessoryRectangular {
+            WeekRectAccessory(snap: snap)
+        } else if family == .accessoryInline {
+            Label("\(snap.done)/\(snap.goal) this week" + (snap.streakWeeks > 0 ? " · \(snap.streakWeeks)-wk streak" : ""), systemImage: "dumbbell.fill")
+        } else if family == .systemMedium {
             if snap.pro { WeekMediumView(snap: snap) } else {
                 HStack(spacing: 14) {
                     WeekSmallView(snap: snap, tape: false).frame(width: 120)
@@ -93,5 +105,19 @@ struct RestLive: Widget {
             }
             .keylineTint(Chalk.red)
         }
+    }
+}
+
+/// Control Center, the Lock Screen and the Action button: one tap starts the next workout.
+@available(iOS 18.0, *)
+struct StartWorkoutControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "com.mattbusel.ironbook.start") {
+            ControlWidgetButton(action: StartNextWorkoutIntent()) {
+                Label("Start Workout", systemImage: "dumbbell.fill")
+            }
+        }
+        .displayName("Start Workout")
+        .description("Opens Ironbook on your next template.")
     }
 }

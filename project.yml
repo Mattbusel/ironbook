@@ -33,6 +33,7 @@ targets:
           - group.com.mattbusel.ironbook
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        com.apple.developer.ubiquity-kvstore-identifier: $(TeamIdentifierPrefix)com.mattbusel.ironbook
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mattbusel.ironbook
@@ -57,6 +58,10 @@ targets:
         UIUserInterfaceStyle: Dark
         UIStatusBarStyle: UIStatusBarStyleLightContent
         ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: com.mattbusel.ironbook
+            CFBundleURLSchemes:
+              - ironbook
         NSSupportsLiveActivities: true
         NSHealthUpdateUsageDescription: "Ironbook can save each finished workout to Apple Health as strength training, with its start and end time. Only if you turn it on in Settings."
         NSHealthShareUsageDescription: "Ironbook does not read anything from Apple Health. It only saves finished workouts, if you turn that on."
